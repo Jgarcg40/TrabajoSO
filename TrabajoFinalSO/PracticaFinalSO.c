@@ -86,3 +86,26 @@ int main(int argc, char const *argv[]){
 return 0;
 }
 
+
+void writeLogMessage(char *id, char *msg) {
+	
+	// CALCULAMOS LA HORA ACTUAL
+	
+	time_t now = time(0);
+	struct tm *tlocal = localtime(&now);
+	
+	char stnow[19];
+	strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal); 
+	
+	// ESCRIBIMOS EN LOG
+
+	pthread_mutex_lock(&mutexLog); 
+
+	logFile = fopen(logFileName, "a");
+	
+	fprintf(logFile, "[%s] %s: %s\n", stnow, id, msg);
+	fclose(logFile);
+	
+	pthread_mutex_unlock(&mutexLog); 
+}
+
