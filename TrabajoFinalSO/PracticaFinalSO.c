@@ -378,15 +378,57 @@ int buscarSolicitud(int tipo) {
 
 void clienteNormal(int s){
 
+	//Comprobamos que hay menos de 20 clientes
+	if(contadorClientes < 20){
 
+		struct clientes nuevo;
 
+		contadorClientes++;
 
+		nuevo.id = contadorClientes;	
+	
+		nuevo.atentido = NO_ATENDIDO;
+
+		nuevo.tipo = CLIENTE_NORMAL;
+
+		nuevo.ascensor = 0;
+
+		p_thread_create(nuevo.hilo, NULL, accionesCliente, &nuevo);
+
+	}
 
 }
 
 void clienteVIP(int s){
 
+	//Comprobamos que hay menos de 20 clientes
+        if(contadorClientes < 20){
 
+                struct clientes nuevo;
+
+                contadorClientes++;
+
+                nuevo.id = contadorClientes;    
+
+                nuevo.atentido = NO_ATENDIDO;
+
+                nuevo.tipo = CLIENTE_VIP;
+
+                nuevo.ascensor = 0;
+
+                p_thread_create(nuevo.hilo, NULL, accionesCliente, &nuevo);
+
+        }
+
+}
+
+void *acionesCliente(void *ptr){
+
+	char *log = (char*) malloc(sizeOf(char)*100);
+
+	struct clientes cliente = *(struct clientes) ptr
+
+	writeLogMessage(ptr.id, "Entrada de un");	
 
 
 }
