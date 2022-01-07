@@ -35,12 +35,13 @@
 //Funciones
 void writeLogMessage(char *id, char *msg);
 int calculaAleatorios(int min, int max);
-void clienteNormal(int s);
-void clienteVIP(int s);
-void nuevoCliente(int t);
+void nuevoCliente(int s);
 void expulsarCliente(int posicion);
 void finalizarAplicacion(int s);
 void *accionesCliente(void *ptr);
+void irAMaquinas(struc clientes cliente);
+void irseDelHotel(struct clientes cliente);
+void irAAscensores(struct clientes cliente);
 void *accionesRecepcionista(void *ptr);
 int buscarSolicitud(int tipo);
 
@@ -126,7 +127,7 @@ int main(int argc, char const *argv[]){
 	
 	struct sigaction ss;
 
-	ss.sa_handler = clienteNormal;
+	ss.sa_handler = nuevoCliente;
 	sigemptyset(&ss.sa_mask);
 	ss.sa_flags = 0;
 
@@ -137,7 +138,7 @@ int main(int argc, char const *argv[]){
 	
 	struct sigaction ss2;
 
-	ss2.sa_handler = clienteVIP;
+	ss2.sa_handler = nuevoCliente;
 	sigemptyset(&ss2.sa_mask);
 	ss2.sa_flags = 0;
 
@@ -376,60 +377,95 @@ int buscarSolicitud(int tipo) {
 	return posicion;
 }
 
-void clienteNormal(int s){
+//
+void nuevoCliente(int s){
 
-	//Comprobamos que hay menos de 20 clientes
+	//1.Comprobamos si hay espacio
 	if(contadorClientes < 20){
+		//1a. Lo hay
 
+		//1ai. Se anyade el cliente
 		struct clientes nuevo;
-
+		
+		//1aii. Se aumenta el contador de clientes
 		contadorClientes++;
 
+		//1aiii. Se da identidad al cliente
 		nuevo.id = contadorClientes;	
 	
+		//1aiv. Se marca al cliente como NO_ATENDIDO
 		nuevo.atentido = NO_ATENDIDO;
 
-		nuevo.tipo = CLIENTE_NORMAL;
+		//1av. Se guarda el tipo de cliente
+		if(s == SIGUSR1)
+			nuevo.tipo = CLIENTE_NORMAL;
+		else if(s == SIGUSR2)
+			nuevo.tipo = CLIENTE_VIP;
+		else exit(-1);
 
-		nuevo.ascensor = 0;
+		//1avi. Guardamos serologia
+		nuevo.serologia = 0;
 
+		//1avii. Creamos el hilo 
 		p_thread_create(nuevo.hilo, NULL, accionesCliente, &nuevo);
 
 	}
-
+	//1bi. No hay espacio, se ignora la llamada 
 }
 
-void clienteVIP(int s){
-
-	//Comprobamos que hay menos de 20 clientes
-        if(contadorClientes < 20){
-
-                struct clientes nuevo;
-
-                contadorClientes++;
-
-                nuevo.id = contadorClientes;    
-
-                nuevo.atentido = NO_ATENDIDO;
-
-                nuevo.tipo = CLIENTE_VIP;
-
-                nuevo.ascensor = 0;
-
-                p_thread_create(nuevo.hilo, NULL, accionesCliente, &nuevo);
-
-        }
-
-}
 
 void *acionesCliente(void *ptr){
 
-	char *log = (char*) malloc(sizeOf(char)*100);
+	struct clientes cliente = *(struct clientes) ptr;
 
-	struct clientes cliente = *(struct clientes) ptr
+	//Creamos un contenedor donde guardar los logs antes de escribirlos
+	char * log = malloc(sizeOf(char)*100);
 
-	writeLogMessage(ptr.id, "Entrada de un");	
+	//1. Guardamos la hora de entrada 
+	time_t now = time(0);
+        struct tm *tlocal = localtime(&now);
 
+        char stnow[19];
+        strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
+
+	//2. Guardamos el tipo del cliente;
+	printf(log, cliente.tipo);	
+
+	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
+	int queHacer = calculaAleatorios(1,100);
+
+	if(queHacer<=10) //3. irAMaquinas(cliente);
+	else {
+	
+		//4a. comptueba que el cliente no esta siendo atendido
+		while(ptr.atendido = NO_ATENDIDO){
+			
+			//Calcula su proximo movimiento
+			queHacer = calculaAleatorios(1,100);
+
+			
+			if(queHacer <= 20) //4d. va a  3. irAMaquinas(cliente);
+			else if(queHacer(<=30) //4c. se va del hotel irseDelHotel(cliente);
+			else{
+				//Para calcular el 5% del 70% restante volvemos a calcular el comportamiento
+				queHacer = calculaAleatorios(1,100);
+
+				if(queHacer<=5) //4c. se va del hotel irseDelHotel();			
+
+			}		
+			//4e. espera en la cola
+			sleep(3000);
+
+		}
+		//5. Esta siendo atendido, simula ser atendido;
+		sleep(2000);
+	}
+
+	//6. Calculamos si coge los ascensores
+	queHacer = calculaAleatorios(1,100);
+
+	if(queHacer <= 30) //6a. Los coge ascensor(cliente);
+	else //6b. Se va irseDelHotel(cliente);
 
 }
 
