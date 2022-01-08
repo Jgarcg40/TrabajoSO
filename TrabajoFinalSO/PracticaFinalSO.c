@@ -39,9 +39,6 @@ void nuevoCliente(int s);
 void expulsarCliente(int posicion);
 void finalizarAplicacion(int s);
 void *accionesCliente(void *ptr);
-void irAMaquinas(struc clientes cliente);
-void irseDelHotel(struct clientes cliente);
-void irAAscensores(struct clientes cliente);
 void *accionesRecepcionista(void *ptr);
 int buscarSolicitud(int tipo);
 
@@ -377,11 +374,18 @@ int buscarSolicitud(int tipo) {
 	return posicion;
 }
 
-//
+// IMPLEMENTACION DE LAS FUNCIONES RESPECTIVAS DE LOS CLIENTES
+
+//funciones utilizadas unicamente por clientes
+
+void irAMaquinas(struct clientes *cliente, char* logMessage);
+void irseDelHotel(struct clientes *cliente, char* logMessage);
+void irAAscensores(struct clientes *cliente, char* logMessage);
+
 void nuevoCliente(int s){
 
 	//1.Comprobamos si hay espacio
-	if(contadorClientes < 20){
+	if(contadorClientes < atencionMaxClientes){
 		//1a. Lo hay
 
 		//1ai. Se anyade el cliente
@@ -394,7 +398,7 @@ void nuevoCliente(int s){
 		nuevo.id = contadorClientes;	
 	
 		//1aiv. Se marca al cliente como NO_ATENDIDO
-		nuevo.atentido = NO_ATENDIDO;
+		nuevo.atendido = NO_ATENDIDO;
 
 		//1av. Se guarda el tipo de cliente
 		if(s == SIGUSR1)
@@ -407,7 +411,7 @@ void nuevoCliente(int s){
 		nuevo.serologia = 0;
 
 		//1avii. Creamos el hilo 
-		p_thread_create(nuevo.hilo, NULL, accionesCliente, &nuevo);
+		pthread_create(&nuevo.hilo, NULL, accionesCliente, &nuevo);
 
 	}
 	//1bi. No hay espacio, se ignora la llamada 
@@ -416,10 +420,10 @@ void nuevoCliente(int s){
 
 void *acionesCliente(void *ptr){
 
-	struct clientes cliente = *(struct clientes) ptr;
+	struct clientes *cliente = ptr;
 
 	//Creamos un contenedor donde guardar los logs antes de escribirlos
-	char * log = malloc(sizeOf(char)*100);
+	char * log = (char *) malloc(sizeof(char)*100);
 
 	//1. Guardamos la hora de entrada 
 	time_t now = time(0);
@@ -429,46 +433,75 @@ void *acionesCliente(void *ptr){
         strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
 
 	//2. Guardamos el tipo del cliente;
-	printf(log, cliente.tipo);	
+	printf(log, cliente->tipo);	
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
-	int queHacer = calculaAleatorios(1,100);
+	int queHacer;
 
-	if(queHacer<=10) //3. irAMaquinas(cliente);
-	else {
+	queHacer = calculaAleatorios(1,100);
+
+	if(queHacer<=10) irAMaquinas(cliente, log);
 	
-		//4a. comptueba que el cliente no esta siendo atendido
-		while(ptr.atendido = NO_ATENDIDO){
+	//4a. comptueba que el cliente no esta siendo atendido
+	while(cliente->atendido == NO_ATENDIDO){
 			
-			//Calcula su proximo movimiento
+		//Calcula su proximo movimiento
+		queHacer = calculaAleatorios(1,100);
+
+		//Es posible que aparezcan clientes indecisos que acaben de venir de las maquinas y decidan inmediatamente volver a ellas, si esto es un problema, separar la estructura de control.
+		if(queHacer <= 20) irAMaquinas(cliente, log);
+		else if(queHacer<=30) irseDelHotel(cliente, log);
+		else{
+			//Para calcular el 5% del 70% restante volvemos a calcular el comportamiento
 			queHacer = calculaAleatorios(1,100);
 
-			
-			if(queHacer <= 20) //4d. va a  3. irAMaquinas(cliente);
-			else if(queHacer(<=30) //4c. se va del hotel irseDelHotel(cliente);
-			else{
-				//Para calcular el 5% del 70% restante volvemos a calcular el comportamiento
-				queHacer = calculaAleatorios(1,100);
+			if(queHacer<=5) irseDelHotel(cliente, log); //4c. se va del hotel			
 
-				if(queHacer<=5) //4c. se va del hotel irseDelHotel();			
+		}		
+		//4e. espera en la cola
+		sleep(3000);
 
-			}		
-			//4e. espera en la cola
-			sleep(3000);
-
-		}
-		//5. Esta siendo atendido, simula ser atendido;
-		sleep(2000);
 	}
+
+	//5. Esta siendo atendido, simula ser atendido;
+	sleep(2000);
 
 	//6. Calculamos si coge los ascensores
 	queHacer = calculaAleatorios(1,100);
 
-	if(queHacer <= 30) //6a. Los coge ascensor(cliente);
-	else //6b. Se va irseDelHotel(cliente);
+	if(queHacer <= 30) irAAscensores(cliente, log); //6a. Coge los ascensores
+	else irseDelHotel(cliente, log); //6b. Se va del Hotel
+
+	pthread_exit(NULL);
 
 }
 
+void irAMaquinas(struct clientes *cliente, char* logMessage){
+
+	
+
+}
+
+void irseDelHotel(struct clientes *cliente, char* logMessage){
+
+	char* id = (char*) malloc(sizeof(char)*2);
+
+	printf(id,cliente->id);  
+
+	writeLogMessage(id, logMessage);
+	expulsarCliente(cliente->id);
+
+	pthread_exit(NULL);
+
+}
+
+void irAAscensores(struct clientes *cliente, char* logMessage){
+
+	
+
+}
+
+// FIN DE LA IMPLEMENTACION DE LAS FUNCIONES RESPECTIVAS A LOS CLIENTES
 
 void finalizarAplicacion(int s) {
 
