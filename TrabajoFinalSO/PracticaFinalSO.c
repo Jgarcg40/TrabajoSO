@@ -420,7 +420,7 @@ void nuevoCliente(int s){
 }
 
 
-void *acionesCliente(void *ptr){
+void *accionesCliente(void *ptr){
 
 	struct clientes *cliente = ptr;
 
