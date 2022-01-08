@@ -74,6 +74,7 @@ typedef struct clientes {
 	int tipo;
 	int atendido;
 	int serologia;
+	int ascensor;
 	pthread_t hilo;
 } clientes;
 
@@ -297,7 +298,6 @@ void *accionesRecepcionista(void *ptr) {
 					sleep(tiempo);
 
 					pthread_mutex_lock(&mutexColaClientes); 
-					(cola+clienteID)->serologia = SEROLOGIA_INCORRECTA;
     					sprintf(message, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
     					writeLogMessage(titulo, message);
 
@@ -407,8 +407,10 @@ void nuevoCliente(int s){
 			nuevo.tipo = CLIENTE_VIP;
 		else exit(-1);
 
-		//1avi. Guardamos serologia
-		nuevo.serologia = 0;
+		//1avi. Guardamos ascensor
+		nuevo.ascensor = 0;
+
+		//nuevo.serologia = 0;
 
 		//1avii. Creamos el hilo 
 		pthread_create(&nuevo.hilo, NULL, accionesCliente, &nuevo);
