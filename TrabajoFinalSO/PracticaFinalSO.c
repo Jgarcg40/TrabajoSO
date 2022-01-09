@@ -41,6 +41,7 @@ void finalizarAplicacion(int s);
 void *accionesCliente(void *ptr);
 void *accionesRecepcionista(void *ptr);
 int buscarSolicitud(int tipo);
+void incrementaMaquinasChecking(int s);
 
 //Declaración del archivo de log
 FILE *logFile;
@@ -55,11 +56,13 @@ int totalClientes;	//Contador de clientes totales que han pasado por el hotel
 int clientesAscensor;	//Contador de clientes en el ascensor
 int finPrograma;	//Variable para denotar la finalización del programa. Se utilizan los define anteriores.
 int ascensorLleno;	//Variable para denotar si el ascensor está lleno. 1 = lleno / 0 = libre.
+int funcionando = 1; //variable para indicar que el programa está funcionando
 
 //Mutex
 pthread_mutex_t mutexLog; 
 pthread_mutex_t mutexColaClientes;
 pthread_mutex_t mutexAscensor;
+pthread_mutex_t mutexMaquinas;
 
 //Condicionales
 pthread_cond_t ascensorLibre;
@@ -83,6 +86,8 @@ clientes *cola;
 int atencionMaxClientes;
 int totalRecepcionistasVIP;
 int totalRecepcionistas;
+int totalMaquinasChecking;
+int *maquinasChecking;
 
 /* Funcion principal del programa. */
 int main(int argc, char const *argv[]){
@@ -92,25 +97,19 @@ int main(int argc, char const *argv[]){
 		atencionMaxClientes = 20;
 		totalRecepcionistas = 3;
 		totalRecepcionistasVIP = 1;
+		totalMaquinasChecking=5;
 	}
 /*
 	// CANTIDAD DE CLIENTES QUE PUEDE ATENDER EL SISTEMA VARIABLE
-
 	else if(argc == 2) {
 		atencionMaxClientes = atoi(argv[1]);
 		totalRecepcionistas = 3;
 		totalRecepcionistasVIP = 1;
+	}*/
+	// CANTIDAD DE MAQUINAS DE AUTOCHEKING ENTRA POR LÍNEA DE COMANDOS
+	else if(argc==3){
+		totalMaquinasChecking = atoi(argv[2]);
 	}
-
-	// CANTIDAD DE CLIENTES QUE PUEDE ATENDER EL SISTEMA Y RECEPCIONISTAS VARIABLE
-
-	else if(argc == 3) {
-		atencionMaxClientes = atoi(argv[1]);
-		totalRecepcionistasVIP = atoi(argv[2]);
-
-		totalRecepcionistas = totalRecepcionistasVIP + 2;
-	}
-*/
 	// ARGUMENTOS INVÁLIDOS
 
 	else {
@@ -118,8 +117,16 @@ int main(int argc, char const *argv[]){
 		exit(-1);
 	}
 	
+	maquinasChecking = (int *)malloc(sizeof(int)*totalMaquinasChecking);
 	cola = (clientes *) malloc(atencionMaxClientes * sizeof(clientes));	
 	recepcionistas = (pthread_t *) malloc(totalRecepcionistas * sizeof(pthread_t));	
+	
+//INFO
+	printf("Escriba SIGUSR1 %d para introducir un cliente de los de andar por casa.\n", getpid());
+	printf("Escriba SIGUSR2 %d para introducir un cliente con aires de grandeza.\n", getpid());
+	printf("Escriba SIGINT  %d cuando quiebre el hotel.\n", getpid());
+	printf("Escriba SIGPIPE %d para incrementar el número de máquinas expendedoras.\n", getpid());
+	
 	
 // ENMASCARAR SEÑALES
 	
@@ -152,6 +159,18 @@ int main(int argc, char const *argv[]){
 	ss3.sa_flags = 0;
 
 	if(sigaction(SIGINT, &ss3, NULL) == -1) {
+		perror("Error al enmascarar la señal\n");
+		exit(-1);
+	}
+	
+	//incremento del número de máquinas de autochecking
+	struct sigaction ss4;
+
+	ss4.sa_handler = incrementaMaquinasChecking;
+	sigemptyset(&ss4.sa_mask);
+	ss4.sa_flags = 0;
+
+	if(sigaction(SIGPIPE, &ss4, NULL) == -1) {
 		perror("Error al enmascarar la señal\n");
 		exit(-1);
 	}
@@ -192,8 +211,13 @@ int main(int argc, char const *argv[]){
 	pthread_mutex_init(&mutexLog, NULL);
 	pthread_mutex_init(&mutexColaClientes, NULL);
 	pthread_mutex_init(&mutexAscensor, NULL);
+	pthread_mutex_init(&mutexMaquinas, NULL);
 
 
+	//INICIALIZACION DE LAS MAQUINAS
+	for(i=0; i<totalMaquinasChecking; i++){
+		*(maquinasChecking+i)=0;
+	}
 	
 	// HILOS RECEPCIONISTAS
 	
@@ -209,8 +233,13 @@ int main(int argc, char const *argv[]){
     		
 	}
 	
-
-return 0;
+	//bucle infinito para funcionamiento continuo del programa
+	while(funcionando){
+		sleep(1);
+	}
+	
+	free(maquinasChecking);
+	return 0;
 }
 
 void *accionesRecepcionista(void *ptr) {
@@ -428,14 +457,14 @@ void *accionesCliente(void *ptr){
 	char * log = (char *) malloc(sizeof(char)*100);
 
 	//1. Guardamos la hora de entrada 
-	time_t now = time(0);
+	/*time_t now = time(0);
         struct tm *tlocal = localtime(&now);
 
         char stnow[19];
         strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
 
 	//2. Guardamos el tipo del cliente;
-	printf(log, cliente->tipo);	
+	printf(log, cliente->tipo);	*/
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
 	int queHacer;
@@ -479,9 +508,42 @@ void *accionesCliente(void *ptr){
 }
 
 void irAMaquinas(struct clientes *cliente, char* logMessage){
-
+	int i;
+	int maquinaUsada=-1; 
+	char *msg = (char*)malloc(sizeof(char)*256);
+	char *id = (char*)malloc(sizeof(char)*20);
 	
-
+	sprintf(id, "cliente_%d", cliente->id);
+	sprintf(msg, "A ver como va esto de las maquinitas, halaaaa mira que bonicas ellas.\n");
+	writeLogMessage(id, msg);
+	pthread_mutex_lock(&mutexMaquinas);
+	for(i=0; i<totalMaquinasChecking && maquinaUsada==-1; i++){
+		if(*(maquinasChecking+i)==0){
+			*(maquinasChecking+i)==1;
+			cliente->atendido = ATENDIENDO;
+			maquinaUsada=i;
+		}
+	}
+	pthread_mutex_unlock(&mutexMaquinas);
+	
+	if(cliente->atendido==ATENDIENDO){
+		
+		sprintf(msg, "A ver si funciona la maquina numero %d ...\n", (maquinaUsada+1));
+		writeLogMessage(id, msg);
+		
+		sleep(6);
+		
+		sprintf(msg, "Pueg ya he acabao con la maquina, no fue tan difícil ... (dijo rascándose debajo de la boina).\n");
+		writeLogMessage(id, msg);
+		
+		pthread_mutex_lock(&mutexMaquinas);
+		*(maquinasChecking+maquinaUsada)==0;
+		cliente->atendido = ATENDIDO;
+		pthread_mutex_unlock(&mutexMaquinas);
+	}else{
+		sprintf(msg, "Pero que es esto ?!?!, %d máquinas y ninguna libre !!\n", totalMaquinasChecking);
+		writeLogMessage(id, msg);
+	}
 }
 
 void irseDelHotel(struct clientes *cliente, char* logMessage){
@@ -568,16 +630,22 @@ void writeLogMessage(char *id, char *msg) {
 	logFile = fopen(logFileName, "a");
 	
 	fprintf(logFile, "[%s] %s: %s\n", stnow, id, msg);
+	printf("[%s] %s: %s\n", stnow, id, msg);
 	fclose(logFile);
 	
 	pthread_mutex_unlock(&mutexLog); 
 }
 
 
-
-
 int calculaAleatorios(int min, int max) {
 	return rand() % (max-min+1) + min;
 }
 
-
+void incrementaMaquinasChecking(int s){
+	char *msg = (char*)malloc(sizeof(char)*256);
+	totalMaquinasChecking++;
+	maquinasChecking = (int*)realloc(maquinasChecking, totalMaquinasChecking);
+	sprintf(msg, "Incrementado el número de maquinas de autochecking, ahora son %d maquinas", totalMaquinasChecking);
+	writeLogMessage("Maquinas", msg);
+	
+}
