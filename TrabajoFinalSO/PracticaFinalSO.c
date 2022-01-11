@@ -65,8 +65,7 @@ pthread_mutex_t mutexAscensor;
 pthread_mutex_t mutexMaquinas;
 
 //Condicionales
-pthread_cond_t ascensorLibre;
-pthread_cond_t ascensorOcupado;
+pthread_cond_t ascensorFin;
 
 //Hilos
 pthread_t *recepcionistas;
@@ -203,8 +202,7 @@ int main(int argc, char const *argv[]){
 	
 	//VARIABLES CONDICION
 
-	pthread_cond_init(&ascensorLibre, NULL);
-	pthread_cond_init(&ascensorOcupado, NULL);
+	pthread_cond_init(&ascensorFin, NULL);
 	
 	// MUTEX
 	
@@ -490,12 +488,12 @@ void *accionesCliente(void *ptr){
 
 		}		
 		//4e. espera en la cola
-		sleep(3000);
+		sleep(3);
 
 	}
 
 	//5. Esta siendo atendido, simula ser atendido;
-	sleep(2000);
+	sleep(2);
 
 	//6. Calculamos si coge los ascensores
 	queHacer = calculaAleatorios(1,100);
@@ -561,7 +559,52 @@ void irseDelHotel(struct clientes *cliente, char* logMessage){
 
 void irAAscensores(struct clientes *cliente, char* logMessage){
 
-	
+	char *id = (char*)malloc(sizeof(char)*20);
+	char *msg = (char*)malloc(sizeof(char)*256);
+
+	//Cambiamos la variable "ascensor" del cliente
+	pthread_mutex_lock(&mutexColaClientes);
+	cliente->ascensor = 1;
+	pthread_mutex_unlock(&mutexColaClientes);
+
+	//Intenta acceder al ascensor
+	pthread_mutex_lock(&mutexAscensor);
+
+	while(1){
+		if(clientesAscensor < 6 && ascensorLleno == 0){
+			clientesAscensor++;
+
+			sprintf(id, "cliente_%d: ", cliente->id);
+			sprintf(msg, "El cliente entra al ascensor.\n")
+			writeLogMessage(id, msg);
+
+			if(clientesAscensor == 6) {
+				ascensorLleno = 1;
+				sleep(3);
+				clientesAscensor--;
+				sprintf(id, "cliente_%d", cliente->id);
+				sprintf(msg, "El cliente deja el ascensor.\n")
+				writeLogMessage(id, msg);
+				pthread_cond_signal(&ascensorFin);
+				pthread_mutex_unlock(&mutexAscensor);
+				break;
+			}
+
+			pthread_cond_wait(&ascensorFin, &mutexAscensor);
+			clientesAscensor--;
+			sprintf(id, "cliente_%d", cliente->id);
+			sprintf(msg, "El cliente deja el ascensor.\n")
+			writeLogMessage(id, msg);
+			if(clientesAscensor == 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
+			break;
+		}
+		else{
+			sprintf(id, "cliente_%d: ", cliente->id);
+			sprintf(msg, "El cliente espera por el ascensor.\n")
+			writeLogMessage(id, msg);
+			sleep(3);
+		}
+	}
 
 }
 
