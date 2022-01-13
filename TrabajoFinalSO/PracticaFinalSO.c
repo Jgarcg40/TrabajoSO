@@ -425,6 +425,13 @@ void nuevoCliente(int s){
 
 		//1aiii. Se da identidad al cliente
 		nuevo.id = contadorClientes;	
+
+		pthread_mutex_lock(&mutexColaClientes);
+
+		*(cola+nuevo.id) = nuevo;
+
+		pthread_mutex_unlock(&mutexColaClientes);
+
 	
 		//1aiv. Se marca al cliente como NO_ATENDIDO
 		nuevo.atendido = NO_ATENDIDO;
