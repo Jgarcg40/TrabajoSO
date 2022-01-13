@@ -519,7 +519,7 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 	pthread_mutex_lock(&mutexMaquinas);
 	for(i=0; i<totalMaquinasChecking && maquinaUsada==-1; i++){
 		if(*(maquinasChecking+i)==0){
-			*(maquinasChecking+i)==1;
+			*(maquinasChecking+i)=1;
 			cliente->atendido = ATENDIENDO;
 			maquinaUsada=i;
 		}
@@ -537,7 +537,7 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 		writeLogMessage(id, msg);
 		
 		pthread_mutex_lock(&mutexMaquinas);
-		*(maquinasChecking+maquinaUsada)==0;
+		*(maquinasChecking+maquinaUsada)=0;
 		cliente->atendido = ATENDIDO;
 		pthread_mutex_unlock(&mutexMaquinas);
 	}else{
