@@ -359,12 +359,12 @@ void *accionesRecepcionista(void *ptr) {
 void expulsarCliente(int posicion) {
 
 	// SE RESETEAN VARIABLES
-
+	pthread_mutex_lock(&mutexColaClientes);
 	(cola+posicion)->id = 0;
 	(cola+posicion)->tipo = 0;
 	(cola+posicion)->atendido = 0;
 	(cola+posicion)->hilo = 0;
-
+	pthread_mutex_unlock(&mutexColaClientes);
 	// SE DECREMENTA EL TOTAL DE CLIENTES
 
 	totalClientes--;
@@ -414,6 +414,7 @@ void irAAscensores(struct clientes *cliente, char* logMessage);
 void nuevoCliente(int s){
 
 	//1.Comprobamos si hay espacio
+	pthread_mutex_lock(&mutexColaClientes);
 	if(contadorClientes < atencionMaxClientes){
 		//1a. Lo hay
 
@@ -425,13 +426,7 @@ void nuevoCliente(int s){
 
 		//1aiii. Se da identidad al cliente
 		nuevo.id = contadorClientes;	
-
-		pthread_mutex_lock(&mutexColaClientes);
-
 		*(cola+nuevo.id) = nuevo;
-
-		pthread_mutex_unlock(&mutexColaClientes);
-
 	
 		//1aiv. Se marca al cliente como NO_ATENDIDO
 		nuevo.atendido = NO_ATENDIDO;
@@ -452,6 +447,7 @@ void nuevoCliente(int s){
 		pthread_create(&nuevo.hilo, NULL, accionesCliente, &nuevo);
 
 	}
+	pthread_mutex_unlock(&mutexColaClientes);
 	//1bi. No hay espacio, se ignora la llamada 
 }
 
@@ -480,9 +476,11 @@ void *accionesCliente(void *ptr){
 
 	if(queHacer<=10) irAMaquinas(cliente, log);
 	
+	int atendido = cliente->atendido;
+
 	//4a. comptueba que el cliente no esta siendo atendido
-	while(cliente->atendido == NO_ATENDIDO){
-			
+	while(atendido==NO_ATENDIDO){
+		
 		//Calcula su proximo movimiento
 		queHacer = calculaAleatorios(1,100);
 
@@ -495,7 +493,12 @@ void *accionesCliente(void *ptr){
 
 			if(queHacer<=5) irseDelHotel(cliente, log); //4c. se va del hotel			
 
-		}		
+		}
+
+		pthread_mutex_lock(&mutexColaClientes);
+                atendido = cliente->atendido;
+                pthread_mutex_unlock(&mutexColaClientes);
+		
 		//4e. espera en la cola
 		sleep(3);
 
