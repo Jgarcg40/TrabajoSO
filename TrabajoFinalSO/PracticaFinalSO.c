@@ -462,7 +462,7 @@ void *accionesCliente(void *ptr){
         strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
 
 	//2. Guardamos el tipo del cliente;
-	sprintf(log, cliente->tipo);	*/
+	sprintf(log, "Cliente de tipo %d",cliente->tipo);	*/
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
 	int queHacer;
@@ -517,7 +517,7 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 	pthread_mutex_lock(&mutexMaquinas);
 	for(i=0; i<totalMaquinasChecking && maquinaUsada==-1; i++){
 		if(*(maquinasChecking+i)==0){
-			*(maquinasChecking+i)==1;
+			*(maquinasChecking+i)=1;
 			cliente->atendido = ATENDIENDO;
 			maquinaUsada=i;
 		}
@@ -535,7 +535,7 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 		writeLogMessage(id, msg);
 		
 		pthread_mutex_lock(&mutexMaquinas);
-		*(maquinasChecking+maquinaUsada)==0;
+		*(maquinasChecking+maquinaUsada)=0;
 		cliente->atendido = ATENDIDO;
 		pthread_mutex_unlock(&mutexMaquinas);
 	}else{
@@ -548,7 +548,7 @@ void irseDelHotel(struct clientes *cliente, char* logMessage){
 
 	char* id = (char*) malloc(sizeof(char)*2);
 
-	sprintf(id,cliente->id);  
+	sprintf(id, "cliente_%d",cliente->id);  
 
 	writeLogMessage(id, logMessage);
 	expulsarCliente(cliente->id);
