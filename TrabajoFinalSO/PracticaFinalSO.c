@@ -65,8 +65,7 @@ pthread_mutex_t mutexAscensor;
 pthread_mutex_t mutexMaquinas;
 
 //Condicionales
-pthread_cond_t ascensorLibre;
-pthread_cond_t ascensorOcupado;
+pthread_cond_t ascensorFin;
 
 //Hilos
 pthread_t *recepcionistas;
@@ -203,8 +202,7 @@ int main(int argc, char const *argv[]){
 	
 	//VARIABLES CONDICION
 
-	pthread_cond_init(&ascensorLibre, NULL);
-	pthread_cond_init(&ascensorOcupado, NULL);
+	pthread_cond_init(&ascensorFin, NULL);
 	
 	// MUTEX
 	
@@ -246,22 +244,23 @@ void *accionesRecepcionista(void *ptr) {
 
 	int tipo = *(int *)ptr;
 	int clienteID = 0;
-	//int recepcionistaID = 0;
 	int clientesAtendidos = 0;
 
 	srand(time(NULL));
 	
-    	char titulo[100];
-    	char message[200];
+	char *msg = (char*)malloc(sizeof(char)*256);
+	char *titulo = (char*)malloc(sizeof(char)*20);
+    	//char titulo[100];
+    	//char message[200];
 
     	sprintf(titulo, "recepcionista_%s", tipoRecepcionista[tipo - 1]);
     	
     	for(;;) {
-
+    	
 		// HAY MAS DE UN CLIENTE EN EL SISTEMA		
 
-		if(totalClientes > 0) {
-		
+		if(contadorClientes > 0) {
+		printf("****************************");
 		
 			// BUSCA UNA SOLICITUD SEGÚN SU TIPO
 
@@ -276,13 +275,14 @@ void *accionesRecepcionista(void *ptr) {
 			// ATIENDE Al CLIENTE
 
 			if(clienteID != -1) {
+			printf("****************************");
 				clientesAtendidos++;
 				pthread_mutex_lock(&mutexColaClientes); 
 
 				(cola+clienteID)->atendido = ATENDIENDO;
     
-    				sprintf(message, "El cliente_%d está siendo atendido", (cola+clienteID)->id);
-    				writeLogMessage(titulo, message);
+    				sprintf(msg, "El cliente_%d está siendo atendido", (cola+clienteID)->id);
+    				writeLogMessage(titulo, msg);
 
 				pthread_mutex_unlock(&mutexColaClientes); 
 
@@ -298,8 +298,8 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
     
-    					sprintf(message, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);
-    					writeLogMessage(titulo, message);
+    					sprintf(msg, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);
+    					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
 				}
@@ -314,8 +314,8 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
 
-    					sprintf(message, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);
-    					writeLogMessage(titulo, message);
+    					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);
+    					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
 				}
@@ -327,8 +327,8 @@ void *accionesRecepcionista(void *ptr) {
 					sleep(tiempo);
 
 					pthread_mutex_lock(&mutexColaClientes); 
-    					sprintf(message, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
-    					writeLogMessage(titulo, message);
+    					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
+    					writeLogMessage(titulo, msg);
 
 					pthread_cancel((cola+clienteID)->hilo);
 					expulsarCliente(clienteID);
@@ -381,7 +381,7 @@ int buscarSolicitud(int tipo) {
 
 			// SI COINCIDE CON EL TIPO O SI ES ATENDEDOR VIP
 
-			if(tipo == RECEPCIONISTA_VIP || (cola+i)->tipo == tipo) {
+			if((cola+i)->tipo == tipo) {
 
 				if(posicion != -1) {
 
@@ -464,7 +464,7 @@ void *accionesCliente(void *ptr){
         strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
 
 	//2. Guardamos el tipo del cliente;
-	printf(log, cliente->tipo);	*/
+	sprintf(log, "Cliente de tipo %d",cliente->tipo);	*/
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
 	int queHacer;
@@ -490,12 +490,12 @@ void *accionesCliente(void *ptr){
 
 		}		
 		//4e. espera en la cola
-		sleep(3000);
+		sleep(3);
 
 	}
 
 	//5. Esta siendo atendido, simula ser atendido;
-	sleep(2000);
+	sleep(2);
 
 	//6. Calculamos si coge los ascensores
 	queHacer = calculaAleatorios(1,100);
@@ -550,7 +550,7 @@ void irseDelHotel(struct clientes *cliente, char* logMessage){
 
 	char* id = (char*) malloc(sizeof(char)*2);
 
-	printf(id,cliente->id);  
+	sprintf(id, "cliente_%d",cliente->id);  
 
 	writeLogMessage(id, logMessage);
 	expulsarCliente(cliente->id);
@@ -561,7 +561,52 @@ void irseDelHotel(struct clientes *cliente, char* logMessage){
 
 void irAAscensores(struct clientes *cliente, char* logMessage){
 
-	
+	char *id = (char*)malloc(sizeof(char)*20);
+	char *msg = (char*)malloc(sizeof(char)*256);
+
+	//Cambiamos la variable "ascensor" del cliente
+	pthread_mutex_lock(&mutexColaClientes);
+	cliente->ascensor = 1;
+	pthread_mutex_unlock(&mutexColaClientes);
+
+	//Intenta acceder al ascensor
+	pthread_mutex_lock(&mutexAscensor);
+
+	while(1){
+		if(clientesAscensor < 6 && ascensorLleno == 0){
+			clientesAscensor++;
+
+			sprintf(id, "cliente_%d: ", cliente->id);
+			sprintf(msg, "El cliente entra al ascensor.\n");
+			writeLogMessage(id, msg);
+
+			if(clientesAscensor == 6) {
+				ascensorLleno = 1;
+				sleep(3);
+				clientesAscensor--;
+				sprintf(id, "cliente_%d", cliente->id);
+				sprintf(msg, "El cliente deja el ascensor.\n");
+				writeLogMessage(id, msg);
+				pthread_cond_signal(&ascensorFin);
+				pthread_mutex_unlock(&mutexAscensor);
+				break;
+			}
+
+			pthread_cond_wait(&ascensorFin, &mutexAscensor);
+			clientesAscensor--;
+			sprintf(id, "cliente_%d", cliente->id);
+			sprintf(msg, "El cliente deja el ascensor.\n");
+			writeLogMessage(id, msg);
+			if(clientesAscensor == 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
+			break;
+		}
+		else{
+			sprintf(id, "cliente_%d: ", cliente->id);
+			sprintf(msg, "El cliente espera por el ascensor.\n");
+			writeLogMessage(id, msg);
+			sleep(3);
+		}
+	}
 
 }
 
