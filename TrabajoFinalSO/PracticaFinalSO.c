@@ -244,22 +244,23 @@ void *accionesRecepcionista(void *ptr) {
 
 	int tipo = *(int *)ptr;
 	int clienteID = 0;
-	//int recepcionistaID = 0;
 	int clientesAtendidos = 0;
 
 	srand(time(NULL));
 	
-    	char titulo[100];
-    	char message[200];
+	char *msg = (char*)malloc(sizeof(char)*256);
+	char *titulo = (char*)malloc(sizeof(char)*20);
+    	//char titulo[100];
+    	//char message[200];
 
     	sprintf(titulo, "recepcionista_%s", tipoRecepcionista[tipo - 1]);
     	
     	for(;;) {
-
+    	
 		// HAY MAS DE UN CLIENTE EN EL SISTEMA		
 
-		if(totalClientes > 0) {
-		
+		if(contadorClientes > 0) {
+		printf("****************************");
 		
 			// BUSCA UNA SOLICITUD SEGÚN SU TIPO
 
@@ -274,13 +275,14 @@ void *accionesRecepcionista(void *ptr) {
 			// ATIENDE Al CLIENTE
 
 			if(clienteID != -1) {
+			printf("****************************");
 				clientesAtendidos++;
 				pthread_mutex_lock(&mutexColaClientes); 
 
 				(cola+clienteID)->atendido = ATENDIENDO;
     
-    				sprintf(message, "El cliente_%d está siendo atendido", (cola+clienteID)->id);
-    				writeLogMessage(titulo, message);
+    				sprintf(msg, "El cliente_%d está siendo atendido", (cola+clienteID)->id);
+    				writeLogMessage(titulo, msg);
 
 				pthread_mutex_unlock(&mutexColaClientes); 
 
@@ -296,8 +298,8 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
     
-    					sprintf(message, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);
-    					writeLogMessage(titulo, message);
+    					sprintf(msg, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);
+    					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
 				}
@@ -312,8 +314,8 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
 
-    					sprintf(message, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);
-    					writeLogMessage(titulo, message);
+    					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);
+    					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
 				}
@@ -325,8 +327,8 @@ void *accionesRecepcionista(void *ptr) {
 					sleep(tiempo);
 
 					pthread_mutex_lock(&mutexColaClientes); 
-    					sprintf(message, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
-    					writeLogMessage(titulo, message);
+    					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
+    					writeLogMessage(titulo, msg);
 
 					pthread_cancel((cola+clienteID)->hilo);
 					expulsarCliente(clienteID);
@@ -379,7 +381,7 @@ int buscarSolicitud(int tipo) {
 
 			// SI COINCIDE CON EL TIPO O SI ES ATENDEDOR VIP
 
-			if(tipo == RECEPCIONISTA_VIP || (cola+i)->tipo == tipo) {
+			if((cola+i)->tipo == tipo) {
 
 				if(posicion != -1) {
 
