@@ -253,14 +253,14 @@ void *accionesRecepcionista(void *ptr) {
     	//char titulo[100];
     	//char message[200];
 
-    	sprintf(titulo, "recepcionista_%s", tipoRecepcionista[tipo - 1]);
+    	sprintf(titulo, "recepcionista_%s_%d", tipoRecepcionista[tipo - 1], tipo);
     	
     	for(;;) {
     	
 		// HAY MAS DE UN CLIENTE EN EL SISTEMA		
 
 		if(contadorClientes > 0) {
-		printf("****************************");
+		//printf("****************************");
 		
 			// BUSCA UNA SOLICITUD SEGÚN SU TIPO
 
@@ -275,7 +275,7 @@ void *accionesRecepcionista(void *ptr) {
 			// ATIENDE Al CLIENTE
 
 			if(clienteID != -1) {
-			printf("****************************");
+			
 				clientesAtendidos++;
 				pthread_mutex_lock(&mutexColaClientes); 
 
