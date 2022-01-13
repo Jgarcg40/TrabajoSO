@@ -462,7 +462,7 @@ void *accionesCliente(void *ptr){
         strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
 
 	//2. Guardamos el tipo del cliente;
-	printf(log, cliente->tipo);	*/
+	sprintf(log, cliente->tipo);	*/
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
 	int queHacer;
@@ -548,7 +548,7 @@ void irseDelHotel(struct clientes *cliente, char* logMessage){
 
 	char* id = (char*) malloc(sizeof(char)*2);
 
-	printf(id,cliente->id);  
+	sprintf(id,cliente->id);  
 
 	writeLogMessage(id, logMessage);
 	expulsarCliente(cliente->id);
