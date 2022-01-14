@@ -437,9 +437,9 @@ void nuevoCliente(int s){
 
 		//1av. Se guarda el tipo de cliente
 		if(s == SIGUSR1)
-			(cola+contadorClientes)->tipo = CLIENTE_NORMAL;
+			(cola+i)->tipo = CLIENTE_NORMAL;
 		else if(s == SIGUSR2)
-			(cola+contadorClientes)->tipo = CLIENTE_VIP;
+			(cola+i)->tipo = CLIENTE_VIP;
 		else exit(-1);
 
 		//1avi. Guardamos ascensor
@@ -466,14 +466,14 @@ void *accionesCliente(void *ptr){
 	char * log = (char *) malloc(sizeof(char)*100);
 
 	//1. Guardamos la hora de entrada 
-	/*time_t now = time(0);
+	time_t now = time(0);
         struct tm *tlocal = localtime(&now);
 
         char stnow[19];
         strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
 
 	//2. Guardamos el tipo del cliente;
-	sprintf(log, "Cliente de tipo %d",(cola+posicion)->tipo);	*/
+	sprintf(log, "Cliente de tipo %d",cliente->tipo);
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
 	int queHacer;
