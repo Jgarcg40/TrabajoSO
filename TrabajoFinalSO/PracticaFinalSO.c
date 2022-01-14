@@ -522,6 +522,8 @@ void *accionesCliente(void *ptr){
 }
 
 void irAMaquinas(struct clientes *cliente, char* logMessage){
+	
+	cliente->atendido = 3;
 	int i;
 	int maquinaUsada=-1; 
 	char *msg = (char*)malloc(sizeof(char)*256);
@@ -556,6 +558,7 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 		pthread_mutex_unlock(&mutexMaquinas);
 	}else{
 		sprintf(msg, "Pero que es esto ?!?!, %d máquinas y ninguna libre !!\n", totalMaquinasChecking);
+		cliente->atendido = NO_ATENDIDO;
 		writeLogMessage(id, msg);
 	}
 }
