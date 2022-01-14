@@ -424,16 +424,16 @@ void nuevoCliente(int s){
 		//1a. Lo hay
 
 		//1ai. Se anyade el cliente
-		
-		
+		int i = 0;
+		while(i < atencionMaxClientes && (cola+i)->id != 0)i++;		
 		//1aii. Se aumenta el contador de clientes
 		totalClientes++;
 
 		//1aiii. Se da identidad al cliente	
-		(cola+contadorClientes)->id = totalClientes;
+		(cola+i)->id = totalClientes;
 	
 		//1aiv. Se marca al cliente como NO_ATENDIDO
-		(cola+contadorClientes)->atendido = NO_ATENDIDO;
+		(cola+i)->atendido = NO_ATENDIDO;
 
 		//1av. Se guarda el tipo de cliente
 		if(s == SIGUSR1)
@@ -443,12 +443,12 @@ void nuevoCliente(int s){
 		else exit(-1);
 
 		//1avi. Guardamos ascensor
-		(cola+contadorClientes)->ascensor = 0;
+		(cola+i)->ascensor = 0;
 
 		//nuevo.serologia = 0;
 
 		//1avii. Creamos el hilo 
-		pthread_create(&(cola+contadorClientes)->hilo, NULL, accionesCliente, (cola+contadorClientes));
+		pthread_create(&(cola+i)->hilo, NULL, accionesCliente, (cola+i));
 
 		contadorClientes++;
 
