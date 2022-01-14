@@ -460,7 +460,7 @@ void nuevoCliente(int s){
 
 void *accionesCliente(void *ptr){
 
-	struct clientes cliente = *ptr;
+	struct clientes* cliente = ptr;
 
 	//Creamos un contenedor donde guardar los logs antes de escribirlos
 	char * log = (char *) malloc(sizeof(char)*100);
@@ -480,9 +480,9 @@ void *accionesCliente(void *ptr){
 
 	queHacer = calculaAleatorios(1,100);
 
-	if(queHacer<=10) irAMaquinas((clientes), log);
+	if(queHacer<=10) irAMaquinas((cliente), log);
 	
-	int atendido = (clientes)->atendido;
+	int atendido = (cliente)->atendido;
 
 	//4a. comptueba que el cliente no esta siendo atendido
 	while(atendido==NO_ATENDIDO){
