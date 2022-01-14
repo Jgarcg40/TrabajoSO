@@ -236,7 +236,7 @@ int main(int argc, char const *argv[]){
 		sleep(1);
 	}
 	
-	free(maquinasChecking);
+	
 	return 0;
 }
 
@@ -476,7 +476,7 @@ void *accionesCliente(void *ptr){
 
 	if(queHacer<=10) irAMaquinas(cliente, log);
 	
-	int atendido = cliente->atendido;
+	int atendido = (cola+cliente->id)->atendido;
 
 	//4a. comptueba que el cliente no esta siendo atendido
 	while(atendido==NO_ATENDIDO){
@@ -496,7 +496,7 @@ void *accionesCliente(void *ptr){
 		}
 
 		pthread_mutex_lock(&mutexColaClientes);
-                atendido = cliente->atendido;
+                atendido = (cola+cliente->id)->atendido;
                 pthread_mutex_unlock(&mutexColaClientes);
 		
 		//4e. espera en la cola
@@ -530,13 +530,13 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 	for(i=0; i<totalMaquinasChecking && maquinaUsada==-1; i++){
 		if(*(maquinasChecking+i)==0){
 			*(maquinasChecking+i)=1;
-			cliente->atendido = ATENDIENDO;
+			(cola+cliente->id)->atendido = ATENDIENDO; 
 			maquinaUsada=i;
 		}
 	}
 	pthread_mutex_unlock(&mutexMaquinas);
 	
-	if(cliente->atendido==ATENDIENDO){
+	if((cola+cliente->id)->atendido==ATENDIENDO){
 		
 		sprintf(msg, "A ver si funciona la maquina numero %d ...\n", (maquinaUsada+1));
 		writeLogMessage(id, msg);
@@ -548,7 +548,7 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 		
 		pthread_mutex_lock(&mutexMaquinas);
 		*(maquinasChecking+maquinaUsada)=0;
-		cliente->atendido = ATENDIDO;
+		(cola+cliente->id)->atendido = ATENDIDO;
 		pthread_mutex_unlock(&mutexMaquinas);
 	}else{
 		sprintf(msg, "Pero que es esto ?!?!, %d máquinas y ninguna libre !!\n", totalMaquinasChecking);
@@ -647,7 +647,7 @@ void finalizarAplicacion(int s) {
 	
 	while(1){
 		pthread_mutex_lock(&mutexColaClientes);
-		if(totalClientes == 0){
+		if(contadorClientes == 0){
 			for(i = 0; i < totalRecepcionistas; i++) {
 				pthread_cancel(*(recepcionistas+i));
 			}
@@ -664,6 +664,7 @@ void finalizarAplicacion(int s) {
 
 	free(recepcionistas);
 	free(cola);
+	free(maquinasChecking);
 
 	exit(-1);
 }
