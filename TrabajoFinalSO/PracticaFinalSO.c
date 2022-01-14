@@ -367,7 +367,7 @@ void expulsarCliente(int posicion) {
 	pthread_mutex_unlock(&mutexColaClientes);
 	// SE DECREMENTA EL TOTAL DE CLIENTES
 
-	totalClientes--;
+	contadorClientes--;
 }
 
 int buscarSolicitud(int tipo) {
@@ -413,38 +413,44 @@ void irAAscensores(struct clientes *cliente, char* logMessage);
 
 void nuevoCliente(int s){
 
+	for(int i = 0; i < contadorClientes; i++){
+
+		printf("Cliente %d, de tipo %d. Atendio = %d. Serologia = %d y ascensor = %d", (cola+i)->id, (cola+i)->tipo, (cola+i)->atendido, (cola+i)->serologia, (cola+i)->ascensor);
+
+	}
 	//1.Comprobamos si hay espacio
 	pthread_mutex_lock(&mutexColaClientes);
 	if(contadorClientes < atencionMaxClientes){
 		//1a. Lo hay
 
 		//1ai. Se anyade el cliente
-		struct clientes nuevo;
+		
 		
 		//1aii. Se aumenta el contador de clientes
-		contadorClientes++;
+		totalClientes++;
 
-		//1aiii. Se da identidad al cliente
-		nuevo.id = contadorClientes;	
-		*(cola+nuevo.id) = nuevo;
+		//1aiii. Se da identidad al cliente	
+		(cola+contadorClientes)->id = totalClientes;
 	
 		//1aiv. Se marca al cliente como NO_ATENDIDO
-		nuevo.atendido = NO_ATENDIDO;
+		(cola+contadorClientes)->atendido = NO_ATENDIDO;
 
 		//1av. Se guarda el tipo de cliente
 		if(s == SIGUSR1)
-			nuevo.tipo = CLIENTE_NORMAL;
+			(cola+contadorClientes)->tipo = CLIENTE_NORMAL;
 		else if(s == SIGUSR2)
-			nuevo.tipo = CLIENTE_VIP;
+			(cola+contadorClientes)->tipo = CLIENTE_VIP;
 		else exit(-1);
 
 		//1avi. Guardamos ascensor
-		nuevo.ascensor = 0;
+		(cola+contadorClientes)->ascensor = 0;
 
 		//nuevo.serologia = 0;
 
 		//1avii. Creamos el hilo 
-		pthread_create(&nuevo.hilo, NULL, accionesCliente, &nuevo);
+		pthread_create(&(cola+contadorClientes)->hilo, NULL, accionesCliente, (cola+contadorClientes));
+
+		contadorClientes++;
 
 	}
 	pthread_mutex_unlock(&mutexColaClientes);
