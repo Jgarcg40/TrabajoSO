@@ -534,13 +534,13 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 	for(i=0; i<totalMaquinasChecking && maquinaUsada==-1; i++){
 		if(*(maquinasChecking+i)==0){
 			*(maquinasChecking+i)=1;
-			(cola+cliente->id)->atendido = ATENDIENDO; 
+			(cliente)->atendido = ATENDIENDO; 
 			maquinaUsada=i;
 		}
 	}
 	pthread_mutex_unlock(&mutexMaquinas);
 	
-	if((cola+cliente->id)->atendido==ATENDIENDO){
+	if(cliente->atendido==ATENDIENDO){
 		
 		sprintf(msg, "A ver si funciona la maquina numero %d ...\n", (maquinaUsada+1));
 		writeLogMessage(id, msg);
@@ -552,7 +552,7 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 		
 		pthread_mutex_lock(&mutexMaquinas);
 		*(maquinasChecking+maquinaUsada)=0;
-		(cola+cliente->id)->atendido = ATENDIDO;
+		(cliente)->atendido = ATENDIDO;
 		pthread_mutex_unlock(&mutexMaquinas);
 	}else{
 		sprintf(msg, "Pero que es esto ?!?!, %d máquinas y ninguna libre !!\n", totalMaquinasChecking);
