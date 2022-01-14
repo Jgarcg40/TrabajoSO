@@ -448,7 +448,7 @@ void nuevoCliente(int s){
 		//nuevo.serologia = 0;
 
 		//1avii. Creamos el hilo 
-		pthread_create(&(cola+contadorClientes)->hilo, NULL, accionesCliente, (cola+contadorClientes));
+		pthread_create(&(cola+contadorClientes)->hilo, NULL, accionesCliente, &(contadorClientes));
 
 		contadorClientes++;
 
@@ -460,7 +460,7 @@ void nuevoCliente(int s){
 
 void *accionesCliente(void *ptr){
 
-	struct clientes *cliente = ptr;
+	int posicion = *(int *)ptr;
 
 	//Creamos un contenedor donde guardar los logs antes de escribirlos
 	char * log = (char *) malloc(sizeof(char)*100);
@@ -473,16 +473,16 @@ void *accionesCliente(void *ptr){
         strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
 
 	//2. Guardamos el tipo del cliente;
-	sprintf(log, "Cliente de tipo %d",cliente->tipo);	*/
+	sprintf(log, "Cliente de tipo %d",(cola+posicion)->tipo);	*/
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
 	int queHacer;
 
 	queHacer = calculaAleatorios(1,100);
 
-	if(queHacer<=10) irAMaquinas(cliente, log);
+	if(queHacer<=10) irAMaquinas((cola+posicion), log);
 	
-	int atendido = (cola+cliente->id)->atendido;
+	int atendido = (cola+posicion)->atendido;
 
 	//4a. comptueba que el cliente no esta siendo atendido
 	while(atendido==NO_ATENDIDO){
@@ -491,22 +491,20 @@ void *accionesCliente(void *ptr){
 		queHacer = calculaAleatorios(1,100);
 
 		//Es posible que aparezcan clientes indecisos que acaben de venir de las maquinas y decidan inmediatamente volver a ellas, si esto es un problema, separar la estructura de control.
-		if(queHacer <= 20) irAMaquinas(cliente, log);
-		else if(queHacer<=30) irseDelHotel(cliente, log);
+		if(queHacer <= 20) irAMaquinas(cola+posicion, log);
+		else if(queHacer<=30) irseDelHotel(cola+posicion, log);
 		else{
 			//Para calcular el 5% del 70% restante volvemos a calcular el comportamiento
 			queHacer = calculaAleatorios(1,100);
 
-			if(queHacer<=5) irseDelHotel(cliente, log); //4c. se va del hotel			
+			if(queHacer<=5) irseDelHotel(cola+posicion, log); //4c. se va del hotel			
 
-		}
-
-		pthread_mutex_lock(&mutexColaClientes);
-                atendido = (cola+cliente->id)->atendido;
-                pthread_mutex_unlock(&mutexColaClientes);
-		
+		}	
 		//4e. espera en la cola
 		sleep(3);
+                pthread_mutex_lock(&mutexColaClientes);
+                atendido = (cola+posicion)->atendido;
+                pthread_mutex_unlock(&mutexColaClientes);
 
 	}
 
@@ -516,8 +514,8 @@ void *accionesCliente(void *ptr){
 	//6. Calculamos si coge los ascensores
 	queHacer = calculaAleatorios(1,100);
 
-	if(queHacer <= 30) irAAscensores(cliente, log); //6a. Coge los ascensores
-	else irseDelHotel(cliente, log); //6b. Se va del Hotel
+	if(queHacer <= 30) irAAscensores(cola+posicion, log); //6a. Coge los ascensores
+	else irseDelHotel(cola+posicion, log); //6b. Se va del Hotel
 
 	pthread_exit(NULL);
 
