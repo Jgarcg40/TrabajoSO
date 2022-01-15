@@ -280,8 +280,9 @@ void *accionesRecepcionista(void *ptr) {
 				pthread_mutex_lock(&mutexColaClientes); 
 
 				(cola+clienteID)->atendido = ATENDIENDO;
-    
-    				sprintf(msg, "El cliente_%d está siendo atendido", (cola+clienteID)->id);
+
+				sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
+				sprintf(msg, "estaria siendo atendido\n");
     				writeLogMessage(titulo, msg);
 
 				pthread_mutex_unlock(&mutexColaClientes); 
@@ -298,7 +299,8 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
     
-    					sprintf(msg, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);
+    					sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
+					sprintf(msg, "Tiene los papeles en orden\n");
     					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
@@ -314,7 +316,8 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
 
-    					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);
+					sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
+					sprintf(msg, "tiene incoherencias en su papeleo\n");
     					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
@@ -326,8 +329,9 @@ void *accionesRecepcionista(void *ptr) {
 					int tiempo = calculaAleatorios(6, 10);
 					sleep(tiempo);
 
-					pthread_mutex_lock(&mutexColaClientes); 
-    					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
+					pthread_mutex_lock(&mutexColaClientes);
+					sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
+					sprintf(msg, "no tenia pasaporte de vacunal y ha sido expulsado del hotel\n");
     					writeLogMessage(titulo, msg);
 
 					expulsarCliente(clienteID);
@@ -345,11 +349,12 @@ void *accionesRecepcionista(void *ptr) {
 		if(clientesAtendidos == 5 && tipo != RECEPCIONISTA_VIP) {
 			clientesAtendidos = 0;
 			
-    			writeLogMessage(titulo, "Va a empezar su descanso");
-			
+			sprintf(titulo, "El recepcionista normal ");
+
 			sleep(5);
-			
-    			writeLogMessage(titulo, "Termina su descanso");
+
+    			sprintf(msg, "se tomo un descansico de 5 segundos\n");
+			writeLogMessage(titulo, msg);
 		}
 	}
 	pthread_exit(NULL);
@@ -363,7 +368,6 @@ void expulsarCliente(int posicion) {
 	(cola+posicion)->id = 0;
 	(cola+posicion)->tipo = 0;
 	(cola+posicion)->atendido = 0;
-	(cola+posicion)->serologia = 0;
 	(cola+posicion)->hilo = 0;
 	pthread_mutex_unlock(&mutexColaClientes);
 	// SE DECREMENTA EL TOTAL DE CLIENTES
@@ -449,7 +453,7 @@ void nuevoCliente(int s){
 		//nuevo.serologia = 0;
 
 		//1avii. Creamos el hilo 
-		pthread_create(&(cola+i)->hilo, NULL, accionesCliente, (cola+i)); 
+		pthread_create(&(cola+i)->hilo, NULL, accionesCliente, (cola+i));
 
 		contadorClientes++;
 
@@ -463,23 +467,25 @@ void *accionesCliente(void *ptr){
 
 	struct clientes* cliente = ptr;
 
-	char* id = (char*) malloc(sizeof(char)*2);
-
-        sprintf(id, "cliente_%d",cliente->id);  
+	//Creamos un contenedor donde guardar los logs antes de escribirlos
+	char * log = (char *) malloc(sizeof(char)*100);
 
 	//1. Guardamos la hora de entrada 
-	writeLogMessage(id, "ha entrado al hotel");
+	time_t now = time(0);
+        struct tm *tlocal = localtime(&now);
+
+        char stnow[19];
+        strftime(stnow, 19, "%d/%m/%y %H:%M:%S", tlocal);
+
 	//2. Guardamos el tipo del cliente;
-	char * tipo = (char*) malloc(sizeof(char)*3);
-	sprintf(tipo, (cliente->tipo==CLIENTE_VIP)? "VIP":" normal");
-	writeLogMessage(id, tipo);
+	sprintf(log, "Cliente de tipo %d",cliente->tipo);
 
 	//queHacer determina la accion que hara el cliente de la siguiente manera "Si el x% de clientes hace y, este cliente hara y si queHacer <=x" 
 	int queHacer;
 
 	queHacer = calculaAleatorios(1,100);
 
-	if(queHacer<=10) irAMaquinas((cliente), id);
+	if(queHacer<=10) irAMaquinas((cliente), log);
 	
 	int atendido = (cliente)->atendido;
 
@@ -490,13 +496,13 @@ void *accionesCliente(void *ptr){
 		queHacer = calculaAleatorios(1,100);
 
 		//Es posible que aparezcan clientes indecisos que acaben de venir de las maquinas y decidan inmediatamente volver a ellas, si esto es un problema, separar la estructura de control.
-		if(atendido == NO_ATENDIDO && queHacer <= 20) irAMaquinas(cliente, id);
-		else if(queHacer<=30) irseDelHotel(cliente, id);
+		if(atendido == NO_ATENDIDO && queHacer <= 20) irAMaquinas(cliente, log);
+		else if(queHacer<=30) irseDelHotel(cliente, log);
 		else{
 			//Para calcular el 5% del 70% restante volvemos a calcular el comportamiento
 			queHacer = calculaAleatorios(1,100);
 
-			if(queHacer<=5) irseDelHotel(cliente, id); //4c. se va del hotel			
+			if(queHacer<=5) irseDelHotel(cliente, log); //4c. se va del hotel			
 
 		}	
 		//4e. espera en la cola
@@ -513,8 +519,8 @@ void *accionesCliente(void *ptr){
 	//6. Calculamos si coge los ascensores
 	queHacer = calculaAleatorios(1,100);
 
-	if(queHacer <= 30) irAAscensores(cliente, id); //6a. Coge los ascensores
-	else irseDelHotel(cliente, id); //6b. Se va del Hotel
+	if(queHacer <= 30) irAAscensores(cliente, log); //6a. Coge los ascensores
+	else irseDelHotel(cliente, log); //6b. Se va del Hotel
 
 	pthread_exit(NULL);
 
@@ -562,9 +568,13 @@ void irAMaquinas(struct clientes *cliente, char* logMessage){
 	}
 }
 
-void irseDelHotel(struct clientes *cliente, char* id){
+void irseDelHotel(struct clientes *cliente, char* logMessage){
 
-	writeLogMessage(id, "se ha ido del hotel");
+	char* id = (char*) malloc(sizeof(char)*2);
+
+	sprintf(id, "cliente_%d",cliente->id);  
+
+	writeLogMessage(id, logMessage);
 	expulsarCliente(cliente->id);
 
 	pthread_exit(NULL);
