@@ -398,6 +398,7 @@ int buscarSolicitud(int tipo) {
 					}
 				} else {
 					posicion = i;
+					(cola+i)->atendido = ATENDIENDO;
 				}
 			}
 		}
