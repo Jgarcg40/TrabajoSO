@@ -250,10 +250,13 @@ void *accionesRecepcionista(void *ptr) {
     	//char message[200];
 	if (tipo == RECEPCIONISTA_NORMAL1) {
         sprintf(titulo, "recepcionista%s", "Normal_1");
+
         }else if (tipo == RECEPCIONISTA_NORMAL2){
                 sprintf(titulo, "recepcionista%s", "Normal_2");
+                       
         }else if (tipo == RECEPCIONISTA_VIP){
                 sprintf(titulo, "recepcionista%s", "VIP_3");
+
 
         }	
     	for(;;) {
@@ -282,8 +285,7 @@ void *accionesRecepcionista(void *ptr) {
 
 				(cola+clienteID)->atendido = ATENDIENDO;
 
-				sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
-				sprintf(msg, "estaria siendo atendido\n");
+				sprintf(msg, "El cliente_%d está siendo atendido", (cola+clienteID)->id);
     				writeLogMessage(titulo, msg);
 
 				pthread_mutex_unlock(&mutexColaClientes); 
@@ -300,8 +302,7 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
     
-    					sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
-					sprintf(msg, "Tiene los papeles en orden\n");
+					sprintf(msg, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);
     					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
@@ -317,8 +318,7 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
 
-					sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
-					sprintf(msg, "tiene incoherencias en su papeleo\n");
+					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);
     					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
@@ -331,8 +331,7 @@ void *accionesRecepcionista(void *ptr) {
 					sleep(tiempo);
 
 					pthread_mutex_lock(&mutexColaClientes);
-					sprintf(titulo, "El cliente numero %d ", (cola+clienteID)->id);
-					sprintf(msg, "no tenia pasaporte de vacunal y ha sido expulsado del hotel\n");
+					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
     					writeLogMessage(titulo, msg);
 
 					expulsarCliente(clienteID);
@@ -350,11 +349,11 @@ void *accionesRecepcionista(void *ptr) {
 		if(clientesAtendidos == 5 && tipo != RECEPCIONISTA_VIP) {
 			clientesAtendidos = 0;
 			
-			sprintf(titulo, "El recepcionista normal ");
+			writeLogMessage(titulo, "Va a empezar su descanso");
 
 			sleep(5);
 
-    			sprintf(msg, "se tomo un descansico de 5 segundos\n");
+    			writeLogMessage(titulo, "Termina su descanso");
 			writeLogMessage(titulo, msg);
 		}
 	}
