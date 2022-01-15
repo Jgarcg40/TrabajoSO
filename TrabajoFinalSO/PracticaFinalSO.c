@@ -15,9 +15,9 @@
 #define PROGRAMA_FINALIZA		1
 
 //Flags para determinar el tipo de recepcionista
-#define RECEPCIONISTA_NORMAL 	1
-#define RECEPCIONISTA_VIP 		2
-#define AUTOCHEKIN				3
+#define RECEPCIONISTA_NORMAL1     1
+#define RECEPCIONISTA_NORMAL2         2
+#define RECEPCIONISTA_VIP                3
 
 //Flags para determinar el tipo de cliente
 #define CLIENTE_NORMAL	1
@@ -46,10 +46,6 @@ void incrementaMaquinasChecking(int s);
 //Declaración del archivo de log
 FILE *logFile;
 char logFileName[] = "registroTiempos.log";
-
-//Arrays auxiliares para la escritura del log
-char tipoCliente[][20] = {"Normal", "VIP"};
-char tipoRecepcionista[][20] = {"Normal", "VIP"};
 
 int contadorClientes;	//Contador de clientes actuales en la recepción
 int totalClientes;	//Contador de clientes totales que han pasado por el hotel
@@ -219,17 +215,17 @@ int main(int argc, char const *argv[]){
 	
 	// HILOS RECEPCIONISTAS
 	
-	int recepcionistaNm = RECEPCIONISTA_NORMAL;
+	int recepcionistaNm = RECEPCIONISTA_NORMAL1;
+	int recepcionistaNm2 = RECEPCIONISTA_NORMAL2;
 	int recepcionistaVIP = RECEPCIONISTA_VIP;
-
 
 	for(i = 0; i < totalRecepcionistas; i++) {
 
-		if(i == 0) pthread_create((recepcionistas+i), NULL, accionesRecepcionista, &recepcionistaNm);
-		else if(i == 1) pthread_create((recepcionistas+i), NULL, accionesRecepcionista, &recepcionistaNm);
-		else if(i == 2) pthread_create((recepcionistas+i), NULL, accionesRecepcionista, &recepcionistaVIP);
-    		
-	}
+        if(i == 0) pthread_create((recepcionistas+i), NULL, accionesRecepcionista, &recepcionistaNm);
+        else if(i == 1) pthread_create((recepcionistas+i), NULL, accionesRecepcionista, &recepcionistaNm2);
+        else if(i == 2) pthread_create((recepcionistas+i), NULL, accionesRecepcionista, &recepcionistaVIP);
+
+    }
 	
 	//bucle infinito para funcionamiento continuo del programa
 	while(funcionando){
@@ -252,9 +248,14 @@ void *accionesRecepcionista(void *ptr) {
 	char *titulo = (char*)malloc(sizeof(char)*20);
     	//char titulo[100];
     	//char message[200];
+	if (tipo == RECEPCIONISTA_NORMAL1) {
+        sprintf(titulo, "recepcionista%s", "Normal_1");
+        }else if (tipo == RECEPCIONISTA_NORMAL2){
+                sprintf(titulo, "recepcionista%s", "Normal_2");
+        }else if (tipo == RECEPCIONISTA_VIP){
+                sprintf(titulo, "recepcionista%s", "VIP_3");
 
-    	sprintf(titulo, "recepcionista_%s_%d", tipoRecepcionista[tipo - 1], tipo);
-    	
+        }	
     	for(;;) {
     	
 		// HAY MAS DE UN CLIENTE EN EL SISTEMA		
@@ -369,6 +370,7 @@ void expulsarCliente(int posicion) {
 	(cola+posicion)->tipo = 0;
 	(cola+posicion)->atendido = 0;
 	(cola+posicion)->hilo = 0;
+	(cola+posicion)->serologia = 0;
 	pthread_mutex_unlock(&mutexColaClientes);
 	// SE DECREMENTA EL TOTAL DE CLIENTES
 
@@ -378,7 +380,7 @@ void expulsarCliente(int posicion) {
 int buscarSolicitud(int tipo) {
 	int posicion = -1;
 	int i = 0;
-
+	tipo = (tipo <= 2)? 1:2;
 	// MIENTRAS HAYA SOLCITUDES QUE ATENDER
 	
 	while(i < atencionMaxClientes) {
