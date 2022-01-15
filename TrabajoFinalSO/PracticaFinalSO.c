@@ -420,11 +420,6 @@ void irAAscensores(struct clientes *cliente, char* logMessage);
 
 void nuevoCliente(int s){
 
-	for(int i = 0; i < contadorClientes; i++){
-
-		printf("Cliente %d, de tipo %d. Atendio = %d. Serologia = %d y ascensor = %d", (cola+i)->id, (cola+i)->tipo, (cola+i)->atendido, (cola+i)->serologia, (cola+i)->ascensor);
-
-	}
 	//1.Comprobamos si hay espacio
 	pthread_mutex_lock(&mutexColaClientes);
 	if(contadorClientes < atencionMaxClientes){
@@ -570,8 +565,7 @@ void irAMaquinas(struct clientes *cliente, char* id){
 void irseDelHotel(struct clientes *cliente, char* id){
 
 	writeLogMessage(id, "se ha ido del hotel");
-	expulsarCliente(cliente->id);
-
+	cliente->id = 0;
 	pthread_exit(NULL);
 
 }
