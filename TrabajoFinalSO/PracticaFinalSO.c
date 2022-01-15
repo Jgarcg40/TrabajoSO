@@ -330,8 +330,8 @@ void *accionesRecepcionista(void *ptr) {
     					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
     					writeLogMessage(titulo, msg);
 
-					pthread_cancel((cola+clienteID)->hilo);
 					expulsarCliente(clienteID);
+					pthread_cancel((cola+clienteID)->hilo);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
 				}
@@ -509,7 +509,7 @@ void *accionesCliente(void *ptr){
 	}
 
 	//5. Esta siendo atendido, simula ser atendido;
-	sleep(2);
+	while(cliente-> atendido != ATENDIDO) sleep(2);
 
 	//6. Calculamos si coge los ascensores
 	queHacer = calculaAleatorios(1,100);
