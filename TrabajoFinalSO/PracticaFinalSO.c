@@ -363,6 +363,7 @@ void expulsarCliente(int posicion) {
 	(cola+posicion)->id = 0;
 	(cola+posicion)->tipo = 0;
 	(cola+posicion)->atendido = 0;
+	(cola+posicion)->serologia = 0;
 	(cola+posicion)->hilo = 0;
 	pthread_mutex_unlock(&mutexColaClientes);
 	// SE DECREMENTA EL TOTAL DE CLIENTES
@@ -448,7 +449,7 @@ void nuevoCliente(int s){
 		//nuevo.serologia = 0;
 
 		//1avii. Creamos el hilo 
-		pthread_create(&(cola+i)->hilo, NULL, accionesCliente, (cola+i));
+		pthread_create(&(cola+i)->hilo, NULL, accionesCliente, (cola+i)); 
 
 		contadorClientes++;
 
