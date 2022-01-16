@@ -669,6 +669,15 @@ void finalizarAplicacion(int s) {
 	pthread_mutex_unlock(&mutexColaClientes);
 	
 	int i;
+		pthread_mutex_lock(&mutexColaClientes);
+	for(i = 0; i < atencionMaxClientes; i++){
+	if((cola+i)->ascensor==1){
+	expulsarCliente(i);
+		pthread_cancel((cola+i)->hilo);
+	}
+	
+	}
+	pthread_mutex_unlock(&mutexColaClientes);
 	
 	// SE ATIENDEN TODAS LAS SOLICITUDES PENDIENTES
 	
@@ -680,6 +689,7 @@ void finalizarAplicacion(int s) {
 			}
 			pthread_mutex_unlock(&mutexColaClientes);
 			break;
+		
 		}else{
 			pthread_mutex_unlock(&mutexColaClientes);
 			sleep(1);
