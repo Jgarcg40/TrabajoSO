@@ -462,7 +462,7 @@ void nuevoCliente(int s){
 
 void *accionesCliente(void *ptr){
 
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	struct clientes* cliente = ptr;
 
