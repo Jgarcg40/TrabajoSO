@@ -535,61 +535,77 @@ void irAMaquinas(struct clientes *cliente, char* id){
 	
 	cliente->atendido = 3;
 	int i;
-	int maquinaUsada=-1; 
+	int maquinaUsada=-1;
+
+	//RESERVA DE MEMORIA DINAMICA PARA LA VARIABLE PUNTERO msg
 	char *msg = (char*)malloc(sizeof(char)*256);
 
-	sprintf(msg, "A ver como va esto de las maquinitas, halaaaa mira que bonicas ellas.\n");
+	//ALMACENAMOS EN LA VARIABLE msg EL MENSAJE
+	sprintf(msg, "Estamos en maquinas.\n");
+
+	//PASAMOS LAS VARIABLES id Y msg A LA FUNCION writeLogMessage PARA QUE SE MUESTREN LOS LOGS QUE HACEN REFERENCIA A MAQUINAS
 	writeLogMessage(id, msg);
+
+	//UTILIZAMOS EL MUTEX PARA BLOQUEAR EL USO DE LAS MAQUINAS
 	pthread_mutex_lock(&mutexMaquinas);
+
+	//MIRAMOS TODAS LAS MAQUINAS
 	for(i=0; i<totalMaquinasChecking && maquinaUsada==-1; i++){
+		//COMPROBAMOS CUAL DE LAS MAQUINAS ESTA DISPONIBLE PARA EL USO
 		if(*(maquinasChecking+i)==0){
+			//INDICAMOS QUE LA MAQUINA ESTA OCUPADA
 			*(maquinasChecking+i)=1;
-			(cliente)->atendido = ATENDIENDO; 
+			//INDICAMOS QUE EL CLIENTE ESTA SIENDO ATENDIDO POR LA MAQUINA
+			(cliente)->atendido = ATENDIENDO;
+			//ASIGNAMOS UN VALOR PARA SALIR DEL BUCLE
 			maquinaUsada=i;
 		}
 	}
+
+	//UTILIZAMOS EL MUTEX PARA DESBLOQUEAR EL USO DE LAS MAQUINAS
 	pthread_mutex_unlock(&mutexMaquinas);
-	
+
+	//EN CASO DE QUE EL CLIENTE ESTE SIENDO ATENDIDO
 	if(cliente->atendido==ATENDIENDO){
-		
+
+		//ALMACENAMOS EN LA VARIABLE msg LA MAQUINA QUE ESTE SIENDO USADA
 		sprintf(msg, "A ver si funciona la maquina numero %d ...\n", (maquinaUsada+1));
+
+		//PASAMOS COMO PARAMETROS LA VARIABLES id Y msg A LA FUNCION writeLogMessage PARA MOSTRAR LOS  LOGS
 		writeLogMessage(id, msg);
-		
+
+		/*DORMIMOS 6 SEGUNDOS*/
 		sleep(6);
-		
-		sprintf(msg, "Pueg ya he acabao con la maquina, no fue tan difícil ... (dijo rascándose debajo de la boina).\n");
+
+		//ALMACENAMOS EN LA VARIABLE msg QUE HA ACABADO DE USAR LA MAQUINA
+		sprintf(msg, "He acabado con la maquina\n");
+
+		//PASAMOS COMO PARAMETROS LA VARIABLES id Y msg A LA FUNCION writeLogMessage PARA MOSTRAR LOS  LOGS
 		writeLogMessage(id, msg);
-		
+
+		//BLOQUEAMOS EL USO DE LAS MAQUINAS CON EL MUTEX
 		pthread_mutex_lock(&mutexMaquinas);
+		/*ASIGNAMOS 0 A LA MAQUINA CUANDO EL CLIENTE YA HA ACABADO DE USARLA*/
 		*(maquinasChecking+maquinaUsada)=0;
+
+		//INDICAMOS QUE EL CLIENTE HA SIDO ATENDIDO POR LA MAQUINA
 		(cliente)->atendido = ATENDIDO;
+
+		//DESBLOQUEAMOS EL MUTEX DE MAQUINAS PORQUE YA SE HA INDICADO QUE LA MAQUINA ESTA VACIA Y QUE EL CLIENTE YA ESTA ATENDIDO
 		pthread_mutex_unlock(&mutexMaquinas);
+
+	//EN CASO QUE NO HAYA NINGUNA MAQUINA LIBRE
 	}else{
-		sprintf(msg, "Pero que es esto ?!?!, %d máquinas y ninguna libre !!\n", totalMaquinasChecking);
+
+		//ALMACENAMOS EN LA VARIABLE msg EL MENSAJE
+		sprintf(msg, "Ninguna maquina libre !!\n");
+
+		//INDICAMOS QUE EL CLIENTE TODAVIA NO ESTA ATENDIDO
 		cliente->atendido = NO_ATENDIDO;
+
+		//PASAMOS COMO PARAMETROS LA VARIABLES id Y msg A LA FUNCION writeLogMessage PARA MOSTRAR LOS  LOGS
 		writeLogMessage(id, msg);
 	}
-}
-
-void irseDelHotel(struct clientes *cliente, char* id){
-
-	//Escribe en el log que el cliente se ha ido
-	writeLogMessage(id, (cliente->atendido = ATENDIDO)? "se ha ido a su habitacion":"se ha ido del hotel");
-	
-	//Iguala a 0 todas las variables de cliente para dejar sitio para uno nuevo
-	cliente->id = 0;
-	cliente->tipo = 0;
- 	cliente->atendido = 0;
- 	cliente->serologia = 0;
- 	cliente->ascensor = 0;
- 	cliente->hilo = 0;
-
-	//Se resta el contador de clientes para que el nuevo cliente pueda entrar
-	contadorClientes--;
-
-	//Se cierra el hilo
-	pthread_exit(NULL);
-
 }
 
 void irAAscensores(struct clientes *cliente, char* logMessage){
@@ -735,10 +751,20 @@ int calculaAleatorios(int min, int max) {
 }
 
 void incrementaMaquinasChecking(int s){
+
+	//RESERVA DE MEMORIA DINAMICA PARA LA VARIABLE PUNTERO msg
 	char *msg = (char*)malloc(sizeof(char)*256);
+
+	//INCREMENTA NUMERO DE MAQUINAS
 	totalMaquinasChecking++;
+
+	//REALMACENO EL ESPACIO EN MEMORIA DE maquinasChecking CON LA VARIABLE totalMaquinasChecking
 	maquinasChecking = (int*)realloc(maquinasChecking, totalMaquinasChecking);
+
+	//ALMACENAMOS EN LA VARIABLE msg EL MENSAJE
 	sprintf(msg, "Incrementado el número de maquinas de autochecking, ahora son %d maquinas", totalMaquinasChecking);
+
+	//PASAMOS LAS VARIABLES id Y msg A LA FUNCION writeLogMessage PARA QUE SE MUESTREN LOS LOGS QUE HACEN REFERENCIA A MAQUINAS
 	writeLogMessage("Maquinas", msg);
 	
 }
