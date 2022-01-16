@@ -482,7 +482,7 @@ void *accionesCliente(void *ptr){
 
 	queHacer = calculaAleatorios(1,100);
 
-	//El 10% de los clientes se va a maquians directamente
+	//El 10% de los clientes se va a maquinas directamente
 	if(queHacer<=10) irAMaquinas((cliente), id);
 	
 	//Guardamos el valor de atendido en una variable a la que se pueda acceder sin concurrencia
@@ -530,6 +530,26 @@ void *accionesCliente(void *ptr){
 	pthread_exit(NULL);
 }
 
+void irseDelHotel(struct clientes *cliente, char* id){
+
+	//Escribe en el log que el cliente se ha ido
+	writeLogMessage(id, (cliente->atendido = ATENDIDO)? "se ha ido a su habitacion":"se ha ido del hotel");
+	
+	//Iguala a 0 todas las variables de cliente para dejar sitio para uno nuevo
+	cliente->id = 0;
+	cliente->tipo = 0;
+ 	cliente->atendido = 0;
+ 	cliente->serologia = 0;
+ 	cliente->ascensor = 0;
+ 	cliente->hilo = 0;
+
+	//Se resta el contador de clientes para que el nuevo cliente pueda entrar
+	contadorClientes--;
+
+	//Se cierra el hilo
+	pthread_exit(NULL);
+
+}
 
 void irAMaquinas(struct clientes *cliente, char* id){
 	
