@@ -462,8 +462,6 @@ void nuevoCliente(int s){
 
 void *accionesCliente(void *ptr){
 
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
 	struct clientes* cliente = ptr;
 
 	//Creamos un contenedor donde guardar los logs antes de escribirlos
@@ -566,7 +564,7 @@ void irAMaquinas(struct clientes *cliente, char* id){
 
 void irseDelHotel(struct clientes *cliente, char* id){
 
-	writeLogMessage(id, "se ha ido del hotel");
+	writeLogMessage(id, (cliente->atendido = ATENDIDO)? "se ha ido a su hacitacion":"se ha ido del hotel");
 	cliente->id = 0;
 	pthread_exit(NULL);
 
