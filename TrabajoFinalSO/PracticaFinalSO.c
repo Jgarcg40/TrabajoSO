@@ -364,13 +364,13 @@ void *accionesRecepcionista(void *ptr) {
 void expulsarCliente(int posicion) {
 
 	// SE RESETEAN VARIABLES
-	pthread_mutex_lock(&mutexColaClientes);
+	
 	(cola+posicion)->id = 0;
 	(cola+posicion)->tipo = 0;
 	(cola+posicion)->atendido = 0;
 	(cola+posicion)->hilo = 0;
 	(cola+posicion)->serologia = 0;
-	pthread_mutex_unlock(&mutexColaClientes);
+
 	// SE DECREMENTA EL TOTAL DE CLIENTES
 
 	contadorClientes--;
