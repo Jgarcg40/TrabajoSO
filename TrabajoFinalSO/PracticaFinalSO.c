@@ -465,14 +465,14 @@ void *accionesCliente(void *ptr){
 
 	struct clientes* cliente = ptr;
 
-	//Creamos un contenedor donde guardar los logs antes de escribirlos
+	//Creamos un contenedor donde guardar id
 	char * id = (char *) malloc(sizeof(char)*100);
 	sprintf(id, "cliente_%d", cliente->id);
 
-	//1. Guardamos la hora de entrada 
+	//1. Escribimos la hora de entrada 
 	writeLogMessage(id, "Ha entrado al hotel");
 
-	//2. Guardamos el tipo del cliente
+	//2. Escribimos  el tipo del cliente
 	char* log = (char*) malloc(sizeof(char)*6);
 	sprintf(log, "Cliente de tipo %s",(cliente->tipo== CLIENTE_VIP)? "VIP":"normal");
 	writeLogMessage(id, log);
@@ -482,9 +482,13 @@ void *accionesCliente(void *ptr){
 
 	queHacer = calculaAleatorios(1,100);
 
+	//El 10% de los clientes se va a maquians directamente
 	if(queHacer<=10) irAMaquinas((cliente), id);
 	
+	//Guardamos el valor de atendido en una variable a la que se pueda acceder sin concurrencia
+	pthread_mutex_lock(&mutexColaClientes);
 	int atendido = (cliente)->atendido;
+	pthread_mutex_unlock(&mutexColaClientes);
 
 	//4a. comptueba que el cliente no esta siendo atendido
 	while(atendido==NO_ATENDIDO){
@@ -492,11 +496,11 @@ void *accionesCliente(void *ptr){
 		//Calcula su proximo movimiento
 		queHacer = calculaAleatorios(1,100);
 
-		//Es posible que aparezcan clientes indecisos que acaben de venir de las maquinas y decidan inmediatamente volver a ellas, si esto es un problema, separar la estructura de control.
+		//20% de cambiar de idea e ir a maquinas 10% de cansarse e irse
 		if(atendido == NO_ATENDIDO && queHacer <= 20) irAMaquinas(cliente, id);
 		else if(queHacer<=30) irseDelHotel(cliente, id);
 		else{
-			//Para calcular el 5% del 70% restante volvemos a calcular el comportamiento
+			//5% se ira al baño perderan el turno y se iran
 			queHacer = calculaAleatorios(1,100);
 
 			if(queHacer<=5) irseDelHotel(cliente, id); //4c. se va del hotel			
@@ -504,24 +508,28 @@ void *accionesCliente(void *ptr){
 		}	
 		//4e. espera en la cola
 		sleep(3);
+
+		//Actualizamos la variable atendido
                 pthread_mutex_lock(&mutexColaClientes);
                 atendido = (cliente)->atendido;
                 pthread_mutex_unlock(&mutexColaClientes);
 
 	}
 
-	//5. Esta siendo atendido, simula ser atendido;
+	//5. Esta siendo atendido, simula ser atendido y comprueba cada dos segundos si han acabado de atenderle;
 	while(cliente-> atendido != ATENDIDO) sleep(2);
 
 	//6. Calculamos si coge los ascensores
 	queHacer = calculaAleatorios(1,100);
 
+	//30% de posibilidades de coger ascensores
 	if(queHacer <= 30) irAAscensores(cliente, id); //6a. Coge los ascensores
 	else irseDelHotel(cliente, id); //6b. Se va del Hotel
 
+	//Ningun hilo llegara a esta linea, pero por si acaso no queremos que haga cosas raras.
 	pthread_exit(NULL);
-
 }
+
 
 void irAMaquinas(struct clientes *cliente, char* id){
 	
@@ -565,8 +573,21 @@ void irAMaquinas(struct clientes *cliente, char* id){
 
 void irseDelHotel(struct clientes *cliente, char* id){
 
-	writeLogMessage(id, (cliente->atendido = ATENDIDO)? "se ha ido a su hacitacion":"se ha ido del hotel");
+	//Escribe en el log que el cliente se ha ido
+	writeLogMessage(id, (cliente->atendido = ATENDIDO)? "se ha ido a su habitacion":"se ha ido del hotel");
+	
+	//Iguala a 0 todas las variables de cliente para dejar sitio para uno nuevo
 	cliente->id = 0;
+	cliente->tipo = 0;
+ 	cliente->atendido = 0;
+ 	cliente->serologia = 0;
+ 	cliente->ascensor = 0;
+ 	cliente->hilo = 0;
+
+	//Se resta el contador de clientes para que el nuevo cliente pueda entrar
+	contadorClientes--;
+
+	//Se cierra el hilo
 	pthread_exit(NULL);
 
 }
