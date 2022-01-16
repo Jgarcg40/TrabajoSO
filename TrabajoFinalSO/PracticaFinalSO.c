@@ -462,6 +462,8 @@ void nuevoCliente(int s){
 
 void *accionesCliente(void *ptr){
 
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS);
+
 	struct clientes* cliente = ptr;
 
 	//Creamos un contenedor donde guardar los logs antes de escribirlos
