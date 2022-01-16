@@ -84,6 +84,21 @@ int totalRecepcionistas;
 int totalMaquinasChecking;
 int *maquinasChecking;
 
+//FUNCION DE PRUEBA//
+void *hiloPrueba(void* ptr);
+
+void *hiloPrueba(void* ptr){
+
+	while(1){
+
+		printf("Soy el hilo de prueba y sigo vivo");
+		sleep(2000);
+
+	}
+
+}
+
+
 /* Funcion principal del programa. */
 int main(int argc, char const *argv[]){
 // CANTIDAD DE CLIENTES QUE PUEDE ATENDER EL SISTEMA Y LOS RECEPCIONISTAS	
@@ -226,7 +241,9 @@ int main(int argc, char const *argv[]){
         else if(i == 2) pthread_create((recepcionistas+i), NULL, accionesRecepcionista, &recepcionistaVIP);
 
     }
-	
+	pthread_t hP;	
+	pthread_create(&hP, NULL, hiloPrueba,0);
+
 	//bucle infinito para funcionamiento continuo del programa
 	while(funcionando){
 		sleep(1);
