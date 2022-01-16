@@ -198,7 +198,7 @@ int main(int argc, char const *argv[]){
 	
 	//VARIABLES CONDICION
 	for(int i = 0; i<=5; i++){
-	pthread_cond_init(&ascensorFin, NULL);
+	pthread_cond_init(&ascensorFin[i], NULL);
 	}
 	// MUTEX
 	
