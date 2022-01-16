@@ -248,6 +248,7 @@ void *accionesRecepcionista(void *ptr) {
 	char *titulo = (char*)malloc(sizeof(char)*20);
     	//char titulo[100];
     	//char message[200];
+    	//Identificadores de los hilos recepcionista
 	if (tipo == RECEPCIONISTA_NORMAL1) {
         sprintf(titulo, "recepcionista%s", "Normal_1");
 
@@ -270,7 +271,7 @@ void *accionesRecepcionista(void *ptr) {
 
 			pthread_mutex_lock(&mutexColaClientes); 
 
-			clienteID = buscarSolicitud(tipo);
+			clienteID = buscarSolicitud(tipo);//busco que el cliente sea igual al tipo del recepcionista
 			
 
 			pthread_mutex_unlock(&mutexColaClientes); 
@@ -285,7 +286,7 @@ void *accionesRecepcionista(void *ptr) {
 
 				(cola+clienteID)->atendido = ATENDIENDO;
 
-				sprintf(msg, "El cliente_%d está siendo atendido", (cola+clienteID)->id);
+				sprintf(msg, "El cliente_%d está siendo atendido", (cola+clienteID)->id);//pongo el flag en atendiendo
     				writeLogMessage(titulo, msg);
 
 				pthread_mutex_unlock(&mutexColaClientes); 
@@ -302,7 +303,7 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
     
-					sprintf(msg, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);
+					sprintf(msg, "El cliente_%d ha sido atendido correctamente en %d segundos", (cola+clienteID)->id, tiempo);//pongo el flag atendido
     					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
@@ -318,7 +319,7 @@ void *accionesRecepcionista(void *ptr) {
 
 					(cola+clienteID)->atendido = ATENDIDO;
 
-					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);
+					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos y contenia errores en los datos", (cola+clienteID)->id, tiempo);//pongo el flag atendido
     					writeLogMessage(titulo, msg);
 
 					pthread_mutex_unlock(&mutexColaClientes); 
@@ -334,8 +335,8 @@ void *accionesRecepcionista(void *ptr) {
 					sprintf(msg, "El cliente_%d ha sido atendido en %d segundos, no tenia el pasaporte vacunal y se le ha expulsado del hotel", (cola+clienteID)->id, tiempo);
     					writeLogMessage(titulo, msg);
 
-					expulsarCliente(clienteID);
-					pthread_cancel((cola+clienteID)->hilo);
+					expulsarCliente(clienteID);//pongo todo a 0
+					pthread_cancel((cola+clienteID)->hilo);//se expulsa el cliente cancelando el hilo
 
 					pthread_mutex_unlock(&mutexColaClientes); 
 				}
