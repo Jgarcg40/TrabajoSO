@@ -583,14 +583,16 @@ void irAAscensores(struct clientes *cliente, char* logMessage){
 	//Intenta acceder al ascensor
 	pthread_mutex_lock(&mutexAscensor);
 
+	//Si hay menos de 6 y el ascensor no está lleno
 	while(1){
 		if(clientesAscensor < 6 && ascensorLleno == 0){
-			clientesAscensor++;
+			clientesAscensor++;	//Se incrementa el número de clientes en el ascensor
 
 			sprintf(id, "cliente_%d: ", cliente->id);
 			sprintf(msg, "El cliente entra al ascensor.\n");
 			writeLogMessage(id, msg);
 
+			//El último marca que el ascensor está lleno, duerme y procede a salir dejando que salgan los demás
 			if(clientesAscensor == 6) {
 				ascensorLleno = 1;
 				sleep(3);
@@ -603,11 +605,13 @@ void irAAscensores(struct clientes *cliente, char* logMessage){
 				break;
 			}
 
+			//Los demás clientes de ascensor esperan a que salga el último que entró para salir
 			pthread_cond_wait(&ascensorFin, &mutexAscensor);
 			clientesAscensor--;
 			sprintf(id, "cliente_%d", cliente->id);
 			sprintf(msg, "El cliente deja el ascensor.\n");
 			writeLogMessage(id, msg);
+			pthread_cond_signal(&ascensorFin);
 			if(clientesAscensor == 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
 			break;
 		}
