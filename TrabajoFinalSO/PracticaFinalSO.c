@@ -666,6 +666,7 @@ void irAAscensores(struct clientes *cliente, char* logMessage){
 			//Los demás clientes de ascensor esperan a que salga el último que entró para salir
 			pthread_cond_wait(&ascensorFin, &mutexAscensor);
 			clientesAscensor--;
+			pthread_mutex_unlock(&mutexAscensor);
 			sprintf(id, "cliente_%d", cliente->id);
 			sprintf(msg, "El cliente deja el ascensor.\n");
 			writeLogMessage(id, msg);
