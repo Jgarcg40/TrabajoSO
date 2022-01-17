@@ -660,9 +660,8 @@ void irAAscensores(struct clientes *cliente, char* id){
 				pthread_mutex_lock(&mutexColaClientes);
 				cliente->ascensor = 0;
 				pthread_mutex_unlock(&mutexColaClientes);
-
-				pthread_mutex_unlock(&mutexAscensor);
 				pthread_cond_broadcast(&ascensorFin);
+				pthread_mutex_unlock(&mutexAscensor);
 				break;
 			}
 
