@@ -654,7 +654,7 @@ void irAAscensores(struct clientes *cliente, char* id){
 				ascensorLleno = 1;
 				sleep(3);
 				clientesAscensor--;
-				pthread_mutex_unlock(&mutexAscensor)
+				pthread_mutex_unlock(&mutexAscensor);
 				sprintf(msg, "El cliente deja el ascensor.\n");
 				writeLogMessage(id, msg);
 
