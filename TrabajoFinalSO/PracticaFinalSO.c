@@ -524,7 +524,7 @@ void *accionesCliente(void *ptr){
 
 	//30% de posibilidades de coger ascensores
 	if(queHacer <= 30) irAAscensores(cliente, id); //6a. Coge los ascensores
-	else irseDelHotel(cliente, id); //6b. Se va del Hotel
+	irseDelHotel(cliente, id); //6b. Se va del Hotel
 
 	//Ningun hilo llegara a esta linea, pero por si acaso no queremos que haga cosas raras.
 	pthread_exit(NULL);
