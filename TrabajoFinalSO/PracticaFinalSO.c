@@ -61,7 +61,7 @@ pthread_mutex_t mutexAscensor;
 pthread_mutex_t mutexMaquinas;
 
 //Condicionales
-pthread_cond_t ascensorFin;
+pthread_cond_t ascensorFin[6];
 
 //Hilos
 pthread_t *recepcionistas;
@@ -197,8 +197,9 @@ int main(int argc, char const *argv[]){
 	ascensorLleno = 0;
 	
 	//VARIABLES CONDICION
-	
-	pthread_cond_init(&ascensorFin, NULL);
+	for(int i = 0; i <=5; i++){
+	pthread_cond_init(&ascensorFin[i], NULL);
+	}
 	
 	// MUTEX
 	
@@ -662,15 +663,14 @@ void irAAscensores(struct clientes *cliente, char* id){
 				pthread_mutex_lock(&mutexColaClientes);
 				cliente->ascensor = 0;
 				pthread_mutex_unlock(&mutexColaClientes);
-				pthread_cond_broadcast(&ascensorFin);
+				pthread_cond_signal(&ascensorFin[clientesAscensor]);
 				pthread_mutex_unlock(&mutexAscensor);
 				break;
 			}
 
 			//Los demás clientes de ascensor esperan a que salga el último que entró para salir
 			//while(!ascensorLleno==1){
-			pthread_mutex_lock(&mutexAscensor);
-			pthread_cond_wait(&ascensorFin, &mutexAscensor);
+			pthread_cond_wait(&ascensorFin[clientesAscensor], &mutexAscensor);
 			//}
 			clientesAscensor--;
 			pthread_mutex_unlock(&mutexAscensor);
@@ -680,6 +680,8 @@ void irAAscensores(struct clientes *cliente, char* id){
 			pthread_mutex_lock(&mutexColaClientes);
 			cliente->ascensor = 0;
 			pthread_mutex_unlock(&mutexColaClientes);
+
+			pthread_cond_signal(&ascensorFin[clientesAscensor]);
 
 			pthread_mutex_lock(&mutexAscensor);
 			if(clientesAscensor == 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
