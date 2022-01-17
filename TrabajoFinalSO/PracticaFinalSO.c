@@ -681,7 +681,7 @@ void irAAscensores(struct clientes *cliente, char* id){
 			pthread_mutex_unlock(&mutexColaClientes);
 			}
 			pthread_mutex_lock(&mutexAscensor);
-			if(clientesAscensor == 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
+			if(clientesAscensor <= 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
 			pthread_mutex_unlock(&mutexAscensor);
 			break;
 		}
