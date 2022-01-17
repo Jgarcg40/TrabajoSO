@@ -628,9 +628,8 @@ void irAMaquinas(struct clientes *cliente, char* id){
 	}
 }
 
-void irAAscensores(struct clientes *cliente, char* logMessage){
+void irAAscensores(struct clientes *cliente, char* id){
 
-	char *id = (char*)malloc(sizeof(char)*20);
 	char *msg = (char*)malloc(sizeof(char)*256);
 
 	//Cambiamos la variable "ascensor" del cliente
@@ -655,7 +654,6 @@ void irAAscensores(struct clientes *cliente, char* logMessage){
 				ascensorLleno = 1;
 				sleep(3);
 				clientesAscensor--;
-				sprintf(id, "cliente_%d", cliente->id);
 				sprintf(msg, "El cliente deja el ascensor.\n");
 				writeLogMessage(id, msg);
 				pthread_mutex_unlock(&mutexAscensor);
@@ -667,7 +665,6 @@ void irAAscensores(struct clientes *cliente, char* logMessage){
 			pthread_cond_wait(&ascensorFin, &mutexAscensor);
 			clientesAscensor--;
 			pthread_mutex_unlock(&mutexAscensor);
-			sprintf(id, "cliente_%d", cliente->id);
 			sprintf(msg, "El cliente deja el ascensor.\n");
 			writeLogMessage(id, msg);
 			//pthread_cond_signal(&ascensorFin);
@@ -675,7 +672,6 @@ void irAAscensores(struct clientes *cliente, char* logMessage){
 			break;
 		}
 		else{
-			sprintf(id, "cliente_%d: ", cliente->id);
 			sprintf(msg, "El cliente espera por el ascensor.\n");
 			writeLogMessage(id, msg);
 			sleep(3);
