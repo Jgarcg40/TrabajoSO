@@ -547,7 +547,7 @@ void irseDelHotel(struct clientes *cliente, char* id){
 	contadorClientes--;
 
 	//Se cierra el hilo
-	pthread_exit(NULL);
+	pthread_cancel(cliente->hilo);
 
 }
 
