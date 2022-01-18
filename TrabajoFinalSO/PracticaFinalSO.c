@@ -340,6 +340,7 @@ void *accionesRecepcionista(void *ptr) {
 
 					pthread_mutex_unlock(&mutexColaClientes); 
 				}
+				
 			}
 		} else {
 			sleep(1);
@@ -523,6 +524,7 @@ void *accionesCliente(void *ptr){
 	queHacer = calculaAleatorios(1,100);
 
 	//30% de posibilidades de coger ascensores
+	
 	if(queHacer <= 30) irAAscensores(cliente, id); //6a. Coge los ascensores
 	irseDelHotel(cliente, id); //6b. Se va del Hotel
 
