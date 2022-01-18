@@ -547,7 +547,7 @@ void irseDelHotel(struct clientes *cliente, char* id){
 	contadorClientes--;
 
 	//Se cierra el hilo
-	pthread_cancel(cliente->hilo);
+	pthread_exit(NULL);
 
 }
 
@@ -664,7 +664,6 @@ void irAAscensores(struct clientes *cliente, char* id){
 				pthread_mutex_unlock(&mutexColaClientes);
 				pthread_cond_broadcast(&ascensorFin);
 				pthread_mutex_unlock(&mutexAscensor);
-				irseDelHotel(cliente, id);
 				break;
 			}
 
@@ -684,7 +683,6 @@ void irAAscensores(struct clientes *cliente, char* id){
 			//pthread_mutex_lock(&mutexAscensor);
 			if(clientesAscensor == 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
 			pthread_mutex_unlock(&mutexAscensor);
-			irseDelHotel(cliente, id);
 			break;
 		}
 		else{
