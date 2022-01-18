@@ -646,7 +646,7 @@ void irAAscensores(struct clientes *cliente, char* id){
 		if(clientesAscensor < 6 && ascensorLleno == 0){
 			clientesAscensor++;	//Se incrementa el número de clientes en el ascensor
 			//pthread_mutex_unlock(&mutexAscensor);
-			sprintf(id, "cliente_%d: ", cliente->id);
+			//sprintf(id, "cliente_%d: ", cliente->id);
 			sprintf(msg, "El cliente entra al ascensor.\n");
 			writeLogMessage(id, msg);
 			//pthread_mutex_lock(&mutexAscensor);
