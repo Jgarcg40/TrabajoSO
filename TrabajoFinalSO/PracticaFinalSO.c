@@ -659,9 +659,9 @@ void irAAscensores(struct clientes *cliente, char* id){
 				sprintf(msg, "El cliente deja el ascensor.\n");
 				writeLogMessage(id, msg);
 
-				pthread_mutex_lock(&mutexColaClientes);
+				/*pthread_mutex_lock(&mutexColaClientes);
 				cliente->ascensor = 0;
-				pthread_mutex_unlock(&mutexColaClientes);
+				pthread_mutex_unlock(&mutexColaClientes);*/
 				pthread_cond_broadcast(&ascensorFin);
 				pthread_mutex_unlock(&mutexAscensor);
 				break;
@@ -676,9 +676,9 @@ void irAAscensores(struct clientes *cliente, char* id){
 			sprintf(msg, "El cliente deja el ascensor.\n");
 			writeLogMessage(id, msg);
 
-			pthread_mutex_lock(&mutexColaClientes);
+			/*pthread_mutex_lock(&mutexColaClientes);
 			cliente->ascensor = 0;
-			pthread_mutex_unlock(&mutexColaClientes);
+			pthread_mutex_unlock(&mutexColaClientes);*/
 
 			//pthread_mutex_lock(&mutexAscensor);
 			if(clientesAscensor == 0) ascensorLleno = 0;	//Si al irse deja el ascensor vacío cambia el flag
